@@ -293,6 +293,118 @@ static func city(L: float) -> Dictionary:
 	}
 
 
+## ---------- LE MÉTRO ----------
+static func metro(L: float) -> Dictionary:
+	var root := Node3D.new()
+	var R := RandomNumberGenerator.new()
+	R.seed = 33
+	var WW := L + 160.0
+	# quai carrelé, légèrement brillant
+	var fm := mat(Color(1, 1, 1), 0.35, 0.05)
+	fm.albedo_texture = noise_tex(0.08, 12, Color("#5a5650"), Color("#8a857a"))
+	fm.roughness_texture = noise_tex(0.02, 13, Color(0.12, 0.12, 0.12), Color(0.6, 0.6, 0.6))
+	fm.uv1_scale = Vector3(WW / 10.0, 30.0 / 10.0, 1)
+	var fl := PlaneMesh.new()
+	fl.size = Vector2(WW, 30)
+	add(root, fl, fm, Vector3(L / 2.0, 0, -4.0 + 15.0), false)
+	var joint := mat("#3a3732", 0.8)
+	var gx := -20.0
+	while gx < L + 60.0:
+		add(root, box(0.05, 0.01, 30), joint, Vector3(gx, 0.004, 11), false)
+		gx += 2.0
+	# bande d'éveil jaune et bord du quai
+	add(root, box(WW, 0.02, 0.6), emat("#e8c23a", 0.35), Vector3(L / 2.0, 0.01, -3.5), false)
+	add(root, box(WW, 1.7, 0.3), mat("#2a2826", 0.8), Vector3(L / 2.0, -0.85, -4.05))
+	# fosse et voies
+	add(root, box(WW, 0.1, 7.0), mat("#141312", 0.95), Vector3(L / 2.0, -1.65, -7.6), false)
+	var railm := mat("#8a8f98", 0.3, 0.9)
+	var sleeper := mat("#2a2018", 0.9)
+	for rz in [-6.6, -8.2]:
+		add(root, box(WW, 0.18, 0.14), railm, Vector3(L / 2.0, -1.5, rz), false)
+	var sx := -20.0
+	while sx < L + 60.0:
+		add(root, box(0.45, 0.1, 3.0), sleeper, Vector3(sx, -1.58, -7.4), false)
+		sx += 1.3
+	# mur du tunnel en carreaux blancs
+	var wm := mat(Color(1, 1, 1), 0.3, 0.05)
+	wm.albedo_texture = noise_tex(0.5, 14, Color("#bfc8bf"), Color("#e4ebe2"), 256)
+	wm.uv1_scale = Vector3(WW / 3.0, 3, 1)
+	add(root, box(WW, 10.0, 0.4), wm, Vector3(L / 2.0, 3.3, -11.4))
+	add(root, box(WW, 0.9, 0.42), mat("#1f6f64", 0.5), Vector3(L / 2.0, 5.2, -11.38), false)
+	add(root, box(WW, 0.3, 10.0), mat("#1a1c20", 0.8), Vector3(L / 2.0, 8.4, -7.2), false)
+	# affiches et enseignes de station
+	var ads := ["#ff4f8b", "#3fe0d0", "#ffd23f", "#b47dff", "#7cff6b"]
+	var frame := mat("#0c0a12", 0.4, 0.6)
+	var ax := 6.0
+	var k := 0
+	while ax < L:
+		add(root, box(5.4, 3.4, 0.1), frame, Vector3(ax, 2.6, -11.15), false)
+		add(root, quad(5.0, 3.0), emat(ads[k % ads.size()], 0.9), Vector3(ax, 2.6, -11.08), false)
+		if k % 3 == 1:
+			neon(root, "STATION NÉON", Vector3(ax + 9.0, 6.6, -11.1), Color("#3fe0d0"))
+		k += 1
+		ax += 17.0
+	# tubes fluorescents sous l'auvent
+	var tubem := unlit("#e8fff4", 2.6)
+	var lx := 0.0
+	while lx < L + 20.0:
+		add(root, box(3.0, 0.12, 0.25), tubem, Vector3(lx, 8.2, -4.8), false)
+		if int(lx) % 18 == 0:
+			omni(root, Vector3(lx, 7.0, -3.0), Color("#d8fff0"), 2.4, 16.0)
+		lx += 6.0
+	# piliers au bord du quai
+	var pil := mat("#d8d0c0", 0.5)
+	var band := mat("#1f6f64", 0.5)
+	var px := 10.0
+	while px < L:
+		add(root, box(1.0, 9.6, 1.0), pil, Vector3(px, 4.8, -3.6))
+		add(root, box(1.05, 0.8, 1.05), band, Vector3(px, 2.0, -3.6))
+		px += 22.0
+	# rame à quai sur la première moitié
+	var body := mat("#c9ccd2", 0.35, 0.7)
+	var winm := emat("#ffe8b0", 1.3)
+	var doorm := mat("#3a3e48", 0.4, 0.6)
+	var stripe := emat("#ff4f8b", 1.6)
+	var cx := 4.0
+	while cx < L * 0.55:
+		add(root, box(21.0, 4.4, 3.2), body, Vector3(cx + 10.5, 1.0, -7.4))
+		add(root, box(21.0, 0.22, 0.04), stripe, Vector3(cx + 10.5, 0.1, -5.78), false)
+		for wi in 5:
+			add(root, quad(2.4, 1.4), winm, Vector3(cx + 2.0 + wi * 4.2, 2.0, -5.79), false)
+		for di in [5.4, 15.6]:
+			add(root, quad(1.6, 3.2), doorm, Vector3(cx + di, 0.9, -5.785), false)
+		omni(root, Vector3(cx + 10.5, 2.0, -5.0), Color("#ffe0a8"), 1.2, 9.0)
+		cx += 22.2
+	# entrée du tunnel et quai du boss
+	add(root, box(14, 10, 0.5), mat("#0a0a0c", 0.9), Vector3(L + 8.0, 3.3, -11.0), false)
+	neon(root, "QUAI 0", Vector3(L - 12.0, 6.6, -11.1), Color("#ff4f8b"))
+	omni(root, Vector3(L - 12.0, 5.5, -8.0), Color("#ff4f8b"), 3.0, 18.0)
+	neon(root, "SORTIE →", Vector3(L * 0.3, 7.4, -11.1), Color("#7cff6b"))
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color("#040608")
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color("#4a5a58")
+	env.ambient_light_energy = 0.6
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_exposure = 1.1
+	env.glow_enabled = true
+	env.glow_intensity = 0.9
+	env.glow_bloom = 0.05
+	env.glow_hdr_threshold = 0.9
+	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
+	env.ssr_enabled = true
+	env.ssr_max_steps = 64
+	env.ssao_enabled = true
+	env.fog_enabled = true
+	env.fog_light_color = Color("#10201c")
+	env.fog_density = 0.012
+	return {
+		"node": root, "env": env,
+		"sun": Color("#cfe8ff"), "sun_energy": 0.3, "rain": false,
+	}
+
+
 ## ---------- LES DOCKS ----------
 static func docks(L: float) -> Dictionary:
 	var root := Node3D.new()

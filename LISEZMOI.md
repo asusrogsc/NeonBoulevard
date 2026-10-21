@@ -1,12 +1,21 @@
 # Néon Boulevard (Godot 4.7)
 
-Beat'em up 2.5D façon Streets of Rage, jouable seul, à deux ou avec un partenaire IA : deux héros (Jade et Bruno), deux stages (Boulevard Néon, Les Docks), des vagues d'ennemis et un boss.
+Beat'em up 2.5D façon Streets of Rage, jouable seul, à deux ou avec un partenaire IA : deux héros (Jade et Bruno), trois stages (Boulevard Néon, Les Docks, Le Métro), des vagues d'ennemis et deux boss.
 Tout est généré par le code : les modèles 3D, les décors, les sons et la musique. Le projet ne contient aucun fichier image ou audio.
 
 ## Lancer le jeu
 1. Ouvre Godot 4.7 (ou plus récent).
 2. Dans le gestionnaire de projets, clique sur **Importer**, puis choisis le fichier `project.godot` de ce dossier.
 3. Appuie sur **F5** (ou sur le bouton ▶ en haut à droite).
+
+## Contenu
+- **Stages** : Boulevard Néon (pluie de nuit), Les Docks (crépuscule), Le Métro (quai et rame à l'arrêt). Chaque stage a sa musique, et le boss a la sienne.
+- **Ennemis** : Punk, Rôdeur (ruée), Costaud (blindé pendant ses attaques), Lanceuse (garde ses distances et lance des couteaux, on peut les éviter en changeant de ligne ou en sautant).
+- **Boss** : Le Contremaître (charge, piétinement) et Vipère (ruée rapide, éventail de trois couteaux). Quand un boss tombe, ses renforts tombent avec lui.
+- **Armes** : tuyau (lent, longue portée, puissant) et couteau (rapide). On les trouve dans les caisses et poubelles, on les ramasse en marchant dessus. Elles s'usent et se cassent, et on les lâche si on est mis au sol.
+- **Combos** : le compteur de coups s'affiche à côté de la barre de vie. À partir de 5 coups enchaînés, un bonus de points est donné.
+- **Coup final** : le KO qui termine un stage déclenche un ralenti avec un flash.
+- **Passants** : des habitants se baladent dans les stages et sur l'écran titre. Les ennemis les ignorent. Si on les frappe, ils sursautent et s'enfuient en courant (ça ne rapporte rien).
 
 ## Modes de jeu
 À l'écran de choix, chaque héros peut être **Joueur**, **IA** ou **Absent** (← → pour choisir le héros, ↑ ↓ pour changer son rôle) :

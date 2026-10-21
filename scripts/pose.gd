@@ -30,9 +30,9 @@ static func get_pose(e, time: float) -> Dictionary:
 	var st: String = e.st
 	var br := sin(time * 5.0 + float(e.ph)) * 1.6
 	var idle := {"lean": 6.0 + br, "fl": [12, 18], "bl": [-10, 16], "fa": [30, 112], "ba": [14, 108]}
-	if e.moving and st in ["idle", "walk", "enter", "charge"]:
+	if e.moving and st in ["idle", "walk", "enter", "charge", "flee", "wait"]:
 		var a := sin(float(e.wph))
-		var run := st == "charge"
+		var run := st == "charge" or st == "flee"
 		var sw := 40.0 if run else 26.0
 		var fa_run: Array = [-50, 15]
 		var ba_run: Array = [-60, 15]
@@ -104,6 +104,12 @@ static func get_pose(e, time: float) -> Dictionary:
 			return {"lean": -35, "fl": [20, 10], "bl": [-20, 10], "fa": [170, 10], "ba": [160, 10]}
 		"spec":
 			return {"lean": -10, "fl": [92, 2], "bl": [-6, 8], "fa": [90, 10], "ba": [-90, 10]}
+		"eshoot", "fan":
+			# lancer de couteau : armé derrière la tête, puis bras tendu
+			var w := 0.45 if st == "fan" else 0.35
+			if t < w:
+				return {"lean": -8, "fl": [20, 14], "bl": [-14, 12], "fa": [-70, 60], "ba": [20, 100]}
+			return {"lean": 16, "fl": [24, 10], "bl": [-20, 8], "fa": [100, 4], "ba": [-10, 90]}
 		"bwind":
 			return {"lean": -8, "fl": [30, 45], "bl": [-30, 40], "fa": [-30, 30], "ba": [-45, 30]}
 		"brec":

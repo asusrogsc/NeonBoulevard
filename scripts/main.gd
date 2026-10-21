@@ -19,7 +19,28 @@ const LOOKS := {
 	"rodeur": {"skin": "#c08660", "hair": "#3f7d3a", "hs": "hood", "top": "#3f7d3a", "sleeve": 1, "pants": "#4a4b55", "shoe": "#1a1a1f", "acc": "#9ed36a", "bulk": 0.95, "s": 1.0},
 	"costaud": {"skin": "#a86f48", "hair": "#000000", "hs": "bald", "top": "#c4682a", "sleeve": 0, "pants": "#c4682a", "shoe": "#2a1d14", "acc": "#ffd23f", "bulk": 1.45, "s": 1.28},
 	"boss": {"skin": "#d9a686", "hair": "#e9e9ef", "hs": "slick", "top": "#3b3a48", "sleeve": 1, "pants": "#22222b", "shoe": "#0e0e12", "acc": "#d8263a", "bulk": 1.4, "s": 1.42, "coat": 1},
+	"lanceuse": {"skin": "#e0a882", "hair": "#d8263a", "hs": "pony", "top": "#1a1a22", "sleeve": 1, "pants": "#5a1f2e", "shoe": "#121016", "acc": "#ff3f6e", "bulk": 0.92, "s": 0.98},
+	"vipere": {"skin": "#c99a78", "hair": "#0f1a14", "hs": "pony", "top": "#127a5a", "sleeve": 1, "pants": "#0e1612", "shoe": "#0b0b0d", "acc": "#c6ff3f", "bulk": 1.12, "s": 1.22, "coat": 1},
 }
+
+## Armes ramassables : elles remplacent le combo du héros et s'usent à chaque coup porté
+const WEAPONS := {
+	"pipe": {"name": "TUYAU", "uses": 14, "atk": [
+		{"id": "heavy", "s": 0.08, "a": 0.09, "r": 0.18, "d": 9, "reach": 34.0},
+		{"id": "heavy", "s": 0.08, "a": 0.09, "r": 0.2, "d": 9, "reach": 34.0},
+		{"id": "heavy", "s": 0.12, "a": 0.1, "r": 0.3, "d": 15, "reach": 36.0, "ko": true, "step": 14.0}]},
+	"knife": {"name": "COUTEAU", "uses": 18, "atk": [
+		{"id": "jab", "s": 0.03, "a": 0.06, "r": 0.09, "d": 7, "reach": 27.0},
+		{"id": "cross", "s": 0.03, "a": 0.06, "r": 0.1, "d": 7, "reach": 27.0},
+		{"id": "jab", "s": 0.05, "a": 0.08, "r": 0.2, "d": 11, "reach": 29.0, "ko": true, "step": 20.0}]},
+}
+
+## Passants : tirés au hasard dans ces palettes
+const NPC_SKIN := ["#f1c9a5", "#e0ac84", "#c68a62", "#9a6440", "#6e4630"]
+const NPC_HAIR := ["#1a1410", "#3a2a1c", "#7a4a24", "#c9a24a", "#d8d4cc", "#5a1a2a"]
+const NPC_HS := ["pony", "buzz", "slick", "bald", "buzz", "pony"]
+const NPC_TOP := ["#d9534f", "#5bc0de", "#f0ad4e", "#8e6fd8", "#e6e2d8", "#3f8f5a", "#c9497a", "#2f4f7f"]
+const NPC_PANTS := ["#2b2f52", "#3a3a42", "#5a4a3a", "#1e1e24", "#4a5a7a"]
 
 const HEROES := {
 	"jade": {"name": "JADE", "look": "jade", "spd": 74.0, "hp": 100.0, "blurb": "Rapide, combos vifs", "stat": [4, 2, 5],
@@ -38,25 +59,33 @@ const ETYPES := {
 	"punk": {"names": ["ZED", "KROK", "RAZ", "DIXIE", "FLINT"], "hp": 30.0, "spd": 42.0, "atk": {"id": "jab", "s": 0.3, "a": 0.1, "r": 0.32, "d": 6, "reach": 22.0}, "score": 500, "cd": [0.7, 1.5]},
 	"rodeur": {"names": ["SILEX", "NOX", "VIRGULE", "ORTIE"], "hp": 26.0, "spd": 64.0, "atk": {"id": "dash", "s": 0.38, "a": 0.3, "r": 0.38, "d": 9, "reach": 22.0, "dash": 150.0, "ko": true, "range": 62.0}, "score": 700, "cd": [1.0, 1.9]},
 	"costaud": {"names": ["BARIL", "GRANIT", "TANK"], "hp": 80.0, "spd": 28.0, "atk": {"id": "heavy", "s": 0.48, "a": 0.12, "r": 0.48, "d": 13, "reach": 27.0, "ko": true}, "score": 1500, "cd": [1.0, 2.0], "armor": true},
-	"boss": {"names": ["LE CONTREMAÎTRE"], "hp": 280.0, "spd": 36.0, "atk": {"id": "heavy", "s": 0.4, "a": 0.12, "r": 0.42, "d": 14, "reach": 33.0, "ko": true}, "score": 20000, "cd": [0.7, 1.3], "armor": true, "boss": true},
+	"boss": {"names": ["LE CONTREMAÎTRE"], "hp": 280.0, "spd": 36.0, "atk": {"id": "heavy", "s": 0.4, "a": 0.12, "r": 0.42, "d": 14, "reach": 33.0, "ko": true}, "score": 20000, "cd": [0.7, 1.3], "armor": true, "boss": true, "style": "brute", "summon": ["punk", "punk", "rodeur"]},
+	"lanceuse": {"names": ["LAME", "VESPA", "SCARLETT", "AIGUILLE"], "hp": 24.0, "spd": 48.0, "atk": {"id": "jab", "s": 0.25, "a": 0.1, "r": 0.3, "d": 5, "reach": 22.0}, "score": 900, "cd": [1.3, 2.3], "ranged": true},
+	"vipere": {"names": ["VIPÈRE"], "hp": 300.0, "spd": 52.0, "atk": {"id": "dash", "s": 0.3, "a": 0.28, "r": 0.4, "d": 13, "reach": 24.0, "dash": 210.0, "ko": true, "range": 75.0}, "score": 30000, "cd": [0.6, 1.2], "armor": true, "boss": true, "style": "vipere", "summon": ["lanceuse", "lanceuse", "punk"]},
 }
 
 const STAGES := [
-	{"name": "BOULEVARD NÉON", "len": 1520.0, "kind": "city",
+	{"name": "BOULEVARD NÉON", "len": 1520.0, "kind": "city", "music": "city",
 		"zones": [{"lock": 384.0, "waves": [["punk", "punk"], ["punk", "rodeur"]]},
 			{"lock": 770.0, "waves": [["punk", "rodeur", "punk"], ["rodeur", "rodeur", "punk"]]},
 			{"lock": 1150.0, "waves": [["punk", "punk", "punk"], ["costaud"]]},
 			{"lock": 1520.0, "waves": [["costaud", "punk", "rodeur"], ["punk", "rodeur"]]}],
-		"props": [[200, 170, "can", "apple"], [560, 196, "can", ""], [690, 165, "crate", "cash"], [980, 190, "can", "apple"], [1300, 168, "crate", "chicken"]]},
-	{"name": "LES DOCKS", "len": 1560.0, "kind": "docks",
+		"props": [[200, 170, "can", "apple"], [560, 196, "can", "pipe"], [690, 165, "crate", "cash"], [980, 190, "can", "apple"], [1300, 168, "crate", "chicken"]]},
+	{"name": "LES DOCKS", "len": 1560.0, "kind": "docks", "music": "docks",
 		"zones": [{"lock": 400.0, "waves": [["rodeur", "punk", "punk"], ["costaud", "rodeur"]]},
 			{"lock": 820.0, "waves": [["punk", "punk", "rodeur", "rodeur"], ["costaud", "costaud"]]},
-			{"lock": 1180.0, "waves": [["rodeur", "rodeur", "punk"], ["costaud", "punk", "punk"]]},
+			{"lock": 1180.0, "waves": [["rodeur", "lanceuse", "punk"], ["costaud", "punk", "lanceuse"]]},
 			{"lock": 1560.0, "boss": true, "waves": [["boss"]]}],
-		"props": [[260, 190, "crate", "apple"], [640, 170, "crate", "cash"], [1000, 192, "can", "chicken"], [1320, 170, "crate", "apple"], [1420, 195, "can", "chicken"]]},
+		"props": [[260, 190, "crate", "apple"], [640, 170, "crate", "knife"], [1000, 192, "can", "chicken"], [1320, 170, "crate", "apple"], [1420, 195, "can", "chicken"]]},
+	{"name": "LE MÉTRO", "len": 1600.0, "kind": "metro", "music": "metro",
+		"zones": [{"lock": 400.0, "waves": [["lanceuse", "punk", "punk"], ["rodeur", "rodeur", "lanceuse"]]},
+			{"lock": 820.0, "waves": [["costaud", "lanceuse", "lanceuse"], ["punk", "punk", "rodeur", "rodeur"]]},
+			{"lock": 1220.0, "waves": [["costaud", "costaud", "lanceuse"], ["rodeur", "lanceuse", "punk", "punk"]]},
+			{"lock": 1600.0, "boss": true, "waves": [["vipere"]]}],
+		"props": [[240, 172, "crate", "pipe"], [600, 192, "can", "apple"], [900, 168, "crate", "knife"], [1100, 190, "can", "chicken"], [1380, 172, "crate", "apple"], [1480, 194, "can", "cash"]]},
 ]
 
-const VULN := ["idle", "walk", "enter", "eatk", "hurt", "held", "bwind", "brec", "charge", "stomp", "wait"]
+const VULN := ["idle", "walk", "enter", "eatk", "hurt", "held", "bwind", "brec", "charge", "stomp", "wait", "eshoot", "fan"]
 
 
 class Ent:
@@ -115,6 +144,10 @@ class Ent:
 	var ai_hold := {}
 	var spec_cd := 0.0
 	var nograb := 0.0
+	var weapon := ""
+	var wuse := 0
+	var chain := 0
+	var chain_t := 0.0
 
 
 class Prop:
@@ -134,6 +167,17 @@ class Item:
 	var kind := ""
 	var t := 0.0
 	var taken := false
+	var uses := 0
+	var node: Node3D = null
+
+
+class Shot:
+	var x := 0.0
+	var y := 0.0
+	var z := 26.0
+	var vx := 0.0
+	var t := 0.0
+	var dead := false
 	var node: Node3D = null
 
 
@@ -174,6 +218,13 @@ var spawn_q: Array = []
 var enemies: Array = []
 var props: Array = []
 var items: Array = []
+var npcs: Array = []
+var npc_t := 2.0
+var shots: Array = []
+var title_view := 200.0
+var slowmo := 0.0
+var scr_flash := 0.0
+var fade := 0.0
 var fxs: Array = []
 var texts: Array = []
 var score := 0
@@ -345,6 +396,15 @@ func _read_input() -> void:
 
 func _process(delta: float) -> void:
 	var dt := minf(delta, 0.05)
+	# ralenti du coup final
+	if slowmo > 0.0 and mode != "pause":
+		slowmo -= dt
+		dt *= 0.3
+	scr_flash = maxf(0.0, scr_flash - delta * 1.6)
+	if mode == "clear" and mode_t > 2.6:
+		fade = clampf((mode_t - 2.6) / 0.55, 0.0, 1.0)
+	else:
+		fade = maxf(0.0, fade - delta * 2.2)
 	_read_input()
 	if Input.is_action_just_pressed("pause"):
 		_toggle_pause()
@@ -441,6 +501,9 @@ func _start_stage(i: int) -> void:
 		_free_rig(e)
 	for c in dyn.get_children():
 		c.queue_free()
+	shots = []
+	slowmo = 0.0
+	fade = 1.0
 	cam_x = 0.0
 	zi = 0
 	zone_on = false
@@ -477,10 +540,14 @@ func _start_stage(i: int) -> void:
 		pl.inv = 1.5
 		pl.face = 1.0
 		pl.ai_t = 0.0
+		pl.weapon = ""
+		pl.chain = 0
 	banner = {"t": 0.0, "dur": 2.6, "a": "STAGE %d" % (i + 1), "b": S.name, "warn": false}
 	mode = "play"
+	sfx.set_track(S.get("music", "city"))
 	sfx.set_music(true)
 	_show_stage(i)
+	_reset_npcs(2)
 
 
 func _spawn_enemy(et: String, side: float) -> Ent:
@@ -560,6 +627,50 @@ func _pop(x: float, y: float, h: float, s: String, c: Color) -> void:
 	texts.append(t)
 
 
+func _burst(x: float, y: float, h: float) -> void:
+	var f := Fx.new()
+	f.k = "burst"
+	f.x = x
+	f.y = y
+	f.h = h
+	f.life = 0.26
+	fxs.append(f)
+
+
+func _is_final_kill(e) -> bool:
+	if e.T.get("boss", false):
+		return true
+	var S: Dictionary = STAGES[stage_i]
+	if not zone_on or zi != S.zones.size() - 1:
+		return false
+	if wave < S.zones[zi].waves.size() - 1 or not spawn_q.is_empty():
+		return false
+	for o in enemies:
+		if o != e and not o.dead:
+			return false
+	return true
+
+
+func _final_blow(e) -> void:
+	# ralenti + flash blanc sur le KO qui termine le stage (ou celui du boss)
+	slowmo = 1.5
+	scr_flash = 0.7
+	_shake(6.0)
+	_sfx("boom")
+	var f := Fx.new()
+	f.k = "ring"
+	f.x = e.x
+	f.y = e.y
+	f.life = 0.7
+	fxs.append(f)
+
+
+func _chain(p) -> void:
+	if p:
+		p.chain += 1
+		p.chain_t = 1.3
+
+
 func _hitstop(t: float) -> void:
 	hitstop = maxf(hitstop, t)
 
@@ -593,6 +704,9 @@ func _player_strike(def: Dictionary, both: bool, z_tol := 16.0) -> bool:
 			if both:
 				dir = signf(e.x - P.x) if e.x != P.x else 1.0
 			_hit_enemy(e, float(def.d), def.get("ko", false), dir)
+			_chain(P)
+			if P.weapon != "":
+				P.wuse -= 1
 			hit = true
 	for pr in props:
 		if pr.broken or P.hit_set.has(pr):
@@ -603,9 +717,40 @@ func _player_strike(def: Dictionary, both: bool, z_tol := 16.0) -> bool:
 			P.hit_set[pr] = true
 			_break_prop(pr)
 			hit = true
+	for n in npcs:
+		if n.st in ["hurt", "flee"] or P.hit_set.has(n):
+			continue
+		var rel3: float = (n.x - P.x) * P.face
+		var okn: bool = absf(n.x - P.x) < reach if both else (rel3 > -4.0 and rel3 < reach)
+		if okn and absf(n.y - P.y) < 9.0 and absf(n.z - P.z) < z_tol:
+			P.hit_set[n] = true
+			_hit_npc(n, signf(n.x - P.x) if n.x != P.x else P.face)
+	if P.weapon != "" and P.wuse <= 0:
+		_break_weapon(P)
 	if hit:
 		P.last_hit = true
 	return hit
+
+
+func _break_weapon(p) -> void:
+	_sfx("wbreak")
+	_debris(p.x + p.face * 14.0, p.y, "#8a93a6")
+	_pop(p.x, p.y, 62.0, WEAPONS[p.weapon].name + " CASSÉ", Color("#c9c9d6"))
+	p.weapon = ""
+
+
+func _drop_weapon(p) -> void:
+	if p.weapon == "":
+		return
+	var it := Item.new()
+	it.x = p.x
+	it.y = p.y
+	it.z = 12.0
+	it.vz = 90.0
+	it.kind = p.weapon
+	it.uses = p.wuse
+	items.append(it)
+	p.weapon = ""
 
 
 func _break_prop(pr) -> void:
@@ -629,6 +774,8 @@ func _hit_enemy(e, d: float, ko: bool, dir: float) -> void:
 	last_foe = e
 	last_foe_t = 3.0
 	_spark(e.x - dir * 4.0, e.y, e.z + 30.0 * float(e.look.s), d >= 10)
+	if d >= 10 or ko:
+		_burst(e.x - dir * 4.0, e.y, e.z + 30.0 * float(e.look.s))
 	_hitstop(0.08 if d >= 10 else 0.045)
 	_sfx("heavy" if d >= 10 else "hit")
 	if d >= 10:
@@ -646,7 +793,7 @@ func _hit_enemy(e, d: float, ko: bool, dir: float) -> void:
 		if e.poise <= 0 and ko:
 			e.poise = 4
 			_knockdown(e, dir, false)
-		elif e.poise <= 0 and not (e.st in ["charge", "stomp", "bwind"]):
+		elif e.poise <= 0 and not (e.st in ["charge", "stomp", "bwind", "fan"]):
 			e.poise = 4
 			e.st = "hurt"
 			e.t = 0.0
@@ -674,6 +821,29 @@ func _knockdown(e, dir: float, dead: bool) -> void:
 		_sfx("ko")
 		score += int(e.T.score)
 		_pop(e.x, e.y, 55.0, "+%d" % int(e.T.score), Color("#ffd23f"))
+		if _is_final_kill(e):
+			_final_blow(e)
+		if boss:
+			# le chef tombe : ses renforts s'écroulent avec lui
+			for o in enemies:
+				if o == e or o.dead:
+					continue
+				score += int(o.T.score)
+				if o.st in ["fall", "thrown"]:
+					o.dead = true
+				elif o.st in ["lying", "getup"]:
+					o.dead = true
+					o.st = "dead"
+					o.t = 0.0
+				else:
+					if o.st == "held":
+						_release_of(o.holder)
+					o.st = "fall"
+					o.t = 0.0
+					o.vz = 120.0
+					o.vx = signf(o.x - e.x) * 70.0 if o.x != e.x else 70.0
+					o.z = maxf(o.z, 1.0)
+					o.dead = true
 
 
 func _release() -> void:
@@ -705,6 +875,7 @@ func _hit_player(p, d: float, ko: bool, src) -> bool:
 	_spark(p.x, p.y, p.z + 30.0, d >= 12)
 	var dir: float = signf(p.x - src.x) if p.x != src.x else 1.0
 	if p.hp <= 0:
+		_drop_weapon(p)
 		p.hp = 0.0
 		p.st = "fall"
 		p.t = 0.0
@@ -715,6 +886,7 @@ func _hit_player(p, d: float, ko: bool, src) -> bool:
 		_sfx("ko")
 		return true
 	if ko or d >= 12 or p.z > 0:
+		_drop_weapon(p)
 		p.st = "fall"
 		p.t = 0.0
 		p.vz = 140.0
@@ -742,7 +914,8 @@ func _start_combo() -> void:
 		P.combo = 0
 	P.last_hit = false
 	P.buffer = false
-	P.atk = h.atk[P.combo]
+	var list: Array = WEAPONS[P.weapon].atk if P.weapon != "" else h.atk
+	P.atk = list[P.combo]
 	P.hit_set = {}
 	_set_p("atk")
 	_sfx("swing")
@@ -757,6 +930,14 @@ func _upd_player(dt: float) -> void:
 	if P.flash > 0:
 		P.flash -= dt
 	P.combo_t += dt
+	if P.chain_t > 0.0:
+		P.chain_t -= dt
+		if P.chain_t <= 0.0:
+			if P.chain >= 5:
+				var bonus: int = P.chain * P.chain * 10
+				score += bonus
+				_pop(P.x, P.y, 72.0, "COMBO %d  +%d" % [P.chain, bonus], Color("#ffd23f"))
+			P.chain = 0
 	var ix := (1 if In.r else 0) - (1 if In.l else 0)
 	var iy := (1 if In.d else 0) - (1 if In.u else 0)
 	var spd: float = h.spd
@@ -883,6 +1064,7 @@ func _upd_player(dt: float) -> void:
 					P.knees += 1
 					var fin: bool = P.knees >= 3
 					_hit_enemy(e2, float(h.knee), fin, P.face)
+					_chain(P)
 					if fin:
 						_release()
 			if P.t > 0.26:
@@ -901,6 +1083,7 @@ func _upd_player(dt: float) -> void:
 				e3.vx = P.face * 175.0
 				e3.z = 12.0
 				e3.hp -= float(h.thr)
+				_chain(P)
 				e3.flash = 0.1
 				last_foe = e3
 				last_foe_t = 3.0
@@ -957,10 +1140,15 @@ func _upd_player(dt: float) -> void:
 	P.y = clampf(P.y, TOP, BOT)
 	if P.z == 0 and P.st in ["idle", "walk"]:
 		for it in items:
-			if it.z <= 0 and absf(it.x - P.x) < 12.0 and absf(it.y - P.y) < 8.0 and not it.taken:
+			if it.z <= 0 and absf(it.x - P.x) < 12.0 and absf(it.y - P.y) < 8.0 and not it.taken and not (it.kind in WEAPONS and P.weapon != ""):
 				it.taken = true
 				_sfx("pick")
-				if it.kind == "apple":
+				if it.kind in WEAPONS:
+					P.weapon = it.kind
+					P.wuse = it.uses if it.uses > 0 else int(WEAPONS[it.kind].uses)
+					_sfx("wpn")
+					_pop(it.x, it.y, 25.0, WEAPONS[it.kind].name, Color("#c9c9d6"))
+				elif it.kind == "apple":
 					P.hp = minf(P.maxhp, P.hp + 30.0)
 					_pop(it.x, it.y, 25.0, "+30 PV", Color("#7cff6b"))
 				elif it.kind == "chicken":
@@ -988,7 +1176,7 @@ func _ai_think(p, dt: float) -> Dictionary:
 			out[k] = p.ai_hold.get(k, false)
 		return out
 	p.ai_t = _rnd(0.06, 0.12)
-	var reach: float = float(p.h.atk[0].reach)
+	var reach: float = float((WEAPONS[p.weapon].atk if p.weapon != "" else p.h.atk)[0].reach)
 	var gx: float = p.x
 	var gy: float = p.y
 	var go := false
@@ -1010,6 +1198,13 @@ func _ai_think(p, dt: float) -> Dictionary:
 			gy = e.y - 20.0 if (p.y < e.y and e.y - 20.0 >= TOP) or e.y + 20.0 > BOT else e.y + 20.0
 		if e.st == "stomp" and e.t > 0.2 and e.t < 0.42 and absf(e.x - p.x) < 100.0 and p.st in ["idle", "walk"]:
 			out.pJump = true
+	# couteaux lancés qui arrivent sur sa ligne : on change de ligne
+	for sh in shots:
+		if signf(p.x - sh.x) == signf(sh.vx) and absf(p.x - sh.x) < 80.0 and absf(p.y - sh.y) < 9.0:
+			danger = true
+			go = true
+			gx = p.x
+			gy = sh.y - 16.0 if (p.y < sh.y and sh.y - 16.0 >= TOP) or sh.y + 16.0 > BOT else sh.y + 16.0
 	# 2) Chope : genoux, parfois projection
 	if p.st == "grab" and p.held:
 		out.pPunch = true
@@ -1035,11 +1230,25 @@ func _ai_think(p, dt: float) -> Dictionary:
 			if d < fd:
 				fd = d
 				food = it
+	var wpn = null
+	if food == null and p.weapon == "":
+		var wd := 90.0
+		for it in items:
+			if it.taken or not (it.kind in WEAPONS) or it.z > 0:
+				continue
+			var d3: float = absf(it.x - p.x) + absf(it.y - p.y)
+			if d3 < wd:
+				wd = d3
+				wpn = it
 	if danger:
 		pass
 	elif food:
 		gx = food.x
 		gy = food.y
+		go = true
+	elif wpn:
+		gx = wpn.x
+		gy = wpn.y
 		go = true
 	elif not foes.is_empty():
 		# 5) Choix de la cible : la plus proche qui peut être frappée
@@ -1198,6 +1407,10 @@ func _upd_enemies(dt: float) -> void:
 				else:
 					tx2 = tg.x + side * (64.0 + (e.slot % 3) * 16.0)
 					ty2 = clampf(tg.y + (-14.0 if e.slot % 2 == 1 else 14.0), TOP, BOT)
+				if T.get("ranged", false) and pv:
+					# la lanceuse garde ses distances et s'aligne pour viser
+					tx2 = tg.x + side * (88.0 + (e.slot % 2) * 14.0)
+					ty2 = tg.y
 				tx2 = clampf(tx2, cam_x + 10.0, cam_x + W - 10.0)
 				var dx2: float = tx2 - e.x
 				var dy2: float = ty2 - e.y
@@ -1216,11 +1429,20 @@ func _upd_enemies(dt: float) -> void:
 					e.sp_t -= dt
 					if not e.summoned and e.hp < e.maxhp * 0.5:
 						e.summoned = true
-						_spawn_enemy("punk", -1.0)
-						_spawn_enemy("punk", 1.0)
-						_spawn_enemy("rodeur", -1.0)
+						var sm: Array = T.get("summon", ["punk", "punk", "rodeur"])
+						for si in sm.size():
+							_spawn_enemy(sm[si], -1.0 if si % 2 == 0 else 1.0)
 						_pop(e.x, e.y, 75.0, "RENFORTS !", Color("#ff4f8b"))
-					if e.sp_t <= 0 and pv:
+					if e.sp_t <= 0 and pv and T.get("style", "") == "vipere":
+						# Vipère : éventail de trois couteaux quand on la tient à distance
+						e.sp_t = _rnd(2.8, 4.2)
+						if adx > 40.0:
+							e.st = "fan"
+							e.t = 0.0
+							e.hit_done = false
+							_sfx("warn")
+							continue
+					elif e.sp_t <= 0 and pv:
 						e.sp_t = _rnd(4.0, 6.5)
 						if e.hp < e.maxhp * 0.6 and randf() < 0.45:
 							e.st = "stomp"
@@ -1234,7 +1456,11 @@ func _upd_enemies(dt: float) -> void:
 							_sfx("warn")
 							continue
 				var rng: float = TA.get("range", TA.reach)
-				if e.engaged and pv and e.cd <= 0 and adx < rng and ady < 5.0 and tg.z < 30:
+				if T.get("ranged", false) and pv and e.cd <= 0 and ady < 5.0 and adx > 40.0 and adx < 170.0:
+					e.st = "eshoot"
+					e.t = 0.0
+					e.hit_done = false
+				elif e.engaged and pv and e.cd <= 0 and adx < rng and ady < 5.0 and tg.z < 30:
 					e.st = "eatk"
 					e.t = 0.0
 					e.atk = TA
@@ -1256,6 +1482,23 @@ func _upd_enemies(dt: float) -> void:
 					e.st = "idle"
 					e.t = 0.0
 					e.cd = _rnd(T.cd[0], T.cd[1])
+			"eshoot", "fan":
+				var fan: bool = e.st == "fan"
+				var rel_t := 0.45 if fan else 0.35
+				if e.t < rel_t:
+					e.face = 1.0 if tg.x > e.x else -1.0
+				elif not e.hit_done:
+					e.hit_done = true
+					_sfx("knife")
+					if fan:
+						for o in [-12.0, 0.0, 12.0]:
+							_shoot(e, o)
+					else:
+						_shoot(e, 0.0)
+				if e.t > rel_t + 0.3:
+					e.st = "idle"
+					e.t = 0.0
+					e.cd = 0.5 if fan else _rnd(T.cd[0], T.cd[1])
 			"bwind":
 				e.face = 1.0 if tg.x > e.x else -1.0
 				if e.t > 0.65:
@@ -1335,6 +1578,8 @@ func _upd_enemies(dt: float) -> void:
 						_sfx("ko")
 						score += int(T.score)
 						_pop(e.x, e.y, 55.0, "+%d" % int(T.score), Color("#ffd23f"))
+						if _is_final_kill(e):
+							_final_blow(e)
 					e.st = "dead" if e.dead else "lying"
 					e.t = 0.0
 			"lying":
@@ -1368,6 +1613,140 @@ func _upd_enemies(dt: float) -> void:
 	enemies = enemies.filter(func(e): return not (e.st == "dead" and e.t > 1.1))
 
 
+# ------------------------------------------------------------------ COUTEAUX LANCÉS
+func _shoot(e, dy: float) -> void:
+	var sh := Shot.new()
+	sh.x = e.x + e.face * 10.0
+	sh.y = clampf(e.y + dy, TOP, BOT)
+	sh.z = 26.0 * float(e.look.s)
+	sh.vx = e.face * 185.0
+	shots.append(sh)
+
+
+func _upd_shots(dt: float) -> void:
+	var alive := _alive_players()
+	for sh in shots:
+		sh.t += dt
+		sh.x += sh.vx * dt
+		for pl in alive:
+			if sh.dead:
+				break
+			if absf(pl.x - sh.x) < 8.0 and absf(pl.y - sh.y) < 7.0 and pl.z < 18.0:
+				if _hit_player(pl, 8.0, false, sh):
+					sh.dead = true
+		if sh.t > 2.5 or sh.x < cam_x - 40.0 or sh.x > cam_x + W + 40.0:
+			sh.dead = true
+	for sh in shots:
+		if sh.dead and sh.node:
+			sh.node.queue_free()
+			sh.node = null
+	shots = shots.filter(func(q): return not q.dead)
+
+
+# ------------------------------------------------------------------ PASSANTS
+## Ils se baladent, s'arrêtent, repartent. Les ennemis les ignorent.
+## Si on les frappe, ils sursautent puis s'enfuient en courant. Ça ne rapporte rien.
+func _view_left() -> float:
+	if mode in ["title", "select"]:
+		return title_view - W / 2.0
+	return cam_x
+
+
+func _npc_look() -> Dictionary:
+	return {"skin": _pick(NPC_SKIN), "hair": _pick(NPC_HAIR), "hs": _pick(NPC_HS), "top": _pick(NPC_TOP),
+		"sleeve": randi() % 2, "pants": _pick(NPC_PANTS), "shoe": _pick(["#1a1a1f", "#e8e4dc", "#5a3a20"]),
+		"acc": _pick(NPC_TOP), "bulk": _rnd(0.88, 1.15), "s": _rnd(0.9, 1.04)}
+
+
+func _spawn_npc(on_screen := false) -> void:
+	var n := Ent.new()
+	n.kind = "npc"
+	n.look = _npc_look()
+	var vl := _view_left()
+	var side := -1.0 if randf() < 0.5 else 1.0
+	if on_screen:
+		n.x = vl + _rnd(50.0, W - 50.0)
+		n.face = -1.0 if randf() < 0.5 else 1.0
+	else:
+		n.x = vl - 20.0 if side < 0 else vl + W + 20.0
+		n.face = -side
+	n.y = _rnd(TOP + 2.0, BOT - 2.0)
+	n.vx = _rnd(15.0, 25.0)
+	n.st = "walk"
+	n.ph = randf() * 6.0
+	n.wph = randf() * 6.0
+	n.cd = _rnd(2.0, 6.0)
+	npcs.append(n)
+
+
+func _reset_npcs(count: int) -> void:
+	for n in npcs:
+		_free_rig(n)
+	npcs = []
+	for k in count:
+		_spawn_npc(true)
+	npc_t = _rnd(3.0, 6.0)
+
+
+func _hit_npc(n, dir: float) -> void:
+	n.st = "hurt"
+	n.t = 0.0
+	n.flash = 0.1
+	n.vy = dir * 45.0
+	n.face = dir
+	_sfx("hit")
+	_spark(n.x, n.y, 30.0 * float(n.look.s), false)
+
+
+func _upd_npcs(dt: float) -> void:
+	var vl := _view_left()
+	npc_t -= dt
+	if npc_t <= 0.0:
+		npc_t = _rnd(3.0, 7.0)
+		if npcs.size() < 3:
+			_spawn_npc()
+	for n in npcs:
+		n.t += dt
+		if n.flash > 0:
+			n.flash -= dt
+		n.moving = false
+		match n.st:
+			"walk":
+				n.x += n.face * n.vx * dt
+				n.moving = true
+				n.wph += dt * 8.0
+				n.cd -= dt
+				if n.cd <= 0.0:
+					n.st = "wait"
+					n.t = 0.0
+					n.cd = _rnd(1.0, 3.0)
+			"wait":
+				n.cd -= dt
+				if n.cd <= 0.0:
+					n.st = "walk"
+					n.cd = _rnd(3.0, 7.0)
+					if randf() < 0.25:
+						n.face = -n.face
+			"hurt":
+				n.x += n.vy * dt
+				n.vy *= 0.85
+				if n.t > 0.28:
+					n.st = "flee"
+					n.t = 0.0
+					_sfx("yelp")
+			"flee":
+				n.x += n.face * 125.0 * dt
+				n.moving = true
+				n.wph += dt * 17.0
+		n.y = clampf(n.y, TOP, BOT)
+		if n.x < vl - 60.0 or n.x > vl + W + 60.0:
+			n.dead = true
+	for n in npcs:
+		if n.dead:
+			_free_rig(n)
+	npcs = npcs.filter(func(q): return not q.dead)
+
+
 # ------------------------------------------------------------------ ZONES
 func _upd_zones(dt: float) -> void:
 	var S: Dictionary = STAGES[stage_i]
@@ -1388,7 +1767,9 @@ func _upd_zones(dt: float) -> void:
 			_queue_wave(z, 0)
 			if z.get("boss", false):
 				_sfx("warn")
-				banner = {"t": 0.0, "dur": 2.2, "a": "ATTENTION", "b": "LE CONTREMAÎTRE", "warn": true}
+				sfx.set_track("boss")
+				var bname: String = ETYPES[z.waves[0][0]].names[0]
+				banner = {"t": 0.0, "dur": 2.2, "a": "ATTENTION", "b": bname, "warn": true}
 	else:
 		for q in spawn_q:
 			q.t -= dt
@@ -1415,7 +1796,7 @@ func _queue_wave(z: Dictionary, i: int) -> void:
 	var list: Array = z.waves[i]
 	for k in list.size():
 		var et: String = list[k]
-		spawn_q.append({"type": et, "side": 1.0 if (et == "boss" or k % 2 == 0) else -1.0, "t": 0.3 + k * 0.55, "done": false})
+		spawn_q.append({"type": et, "side": 1.0 if (ETYPES[et].get("boss", false) or k % 2 == 0) else -1.0, "t": 0.3 + k * 0.55, "done": false})
 
 
 func _stage_clear() -> void:
@@ -1499,6 +1880,7 @@ func _update(dt: float) -> void:
 		dummies[k].t += dt
 	match mode:
 		"title":
+			_upd_npcs(dt)
 			if I.pStart or I.pPunch:
 				mode = "select"
 				_sfx("sel")
@@ -1518,12 +1900,14 @@ func _update(dt: float) -> void:
 				k = (k + (1 if I.pD else -1) + opts.size()) % opts.size()
 				slots[sel] = opts[k]
 				_sfx("sel")
+			_upd_npcs(dt)
 			if (I.pStart or I.pPunch) and slots.count("off") < 2:
 				_begin_game()
 			return
 		"over", "win":
 			mode_t += dt
 			_upd_fx(dt)
+			_upd_npcs(dt)
 			if mode_t > 1.2 and (I.pStart or I.pPunch):
 				mode = "title"
 				_free_players()
@@ -1538,9 +1922,12 @@ func _update(dt: float) -> void:
 				fxs = []
 				texts = []
 				spawn_q = []
+				shots = []
 				banner = null
 				go_t = 0.0
 				last_foe = null
+				slowmo = 0.0
+				_reset_npcs(0)
 			return
 		"pause":
 			return
@@ -1549,6 +1936,7 @@ func _update(dt: float) -> void:
 			for pl in players:
 				pl.t += dt
 			_upd_fx(dt)
+			_upd_npcs(dt)
 			if mode_t > 3.2:
 				if stage_i + 1 < STAGES.size():
 					for pl in players:
@@ -1585,6 +1973,8 @@ func _update(dt: float) -> void:
 	if mode != "play":
 		return
 	_upd_enemies(dt)
+	_upd_shots(dt)
+	_upd_npcs(dt)
 	_upd_zones(dt)
 	for it in items:
 		it.t += dt
@@ -1626,7 +2016,13 @@ func _show_stage(i: int) -> void:
 	if not built.has(i):
 		var S: Dictionary = STAGES[i]
 		var L: float = float(S.len) * S3
-		built[i] = StageBuilder.city(L) if S.kind == "city" else StageBuilder.docks(L)
+		match S.kind:
+			"city":
+				built[i] = StageBuilder.city(L)
+			"metro":
+				built[i] = StageBuilder.metro(L)
+			_:
+				built[i] = StageBuilder.docks(L)
 	if cur_stage >= 0 and built.has(cur_stage):
 		remove_child(built[cur_stage].node)
 	cur_stage = i
@@ -1675,6 +2071,8 @@ func _sync_fighter(e, dt: float, vis := true) -> void:
 		add_child(e.rig)
 		e.rig.apply_pose(Pose.get_pose(e, time), dt, true)
 	var r: Rig = e.rig
+	if r.weapon_kind != e.weapon:
+		r.set_weapon(e.weapon)
 	r.position = Vector3(e.x * S3, e.z * S3, (e.y - 178.0) * S3)
 	r.rotation = Vector3(0, (e.t / 0.55) * PI * 4.0 * e.face if e.st == "spec" else 0.0, 0)
 	r.scale = Vector3(e.face, 1, 1)
@@ -1730,10 +2128,16 @@ func _make_prop(kind: String) -> Node3D:
 		for zz in [-0.35, 0.35]:
 			var bn := StageBuilder.add(g, StageBuilder.cyl(0.08, 0.08, 0.7, 8), M.bone, Vector3(0.9, 0.75, zz))
 			bn.rotation.z = -1.0
-	else:
+	elif kind == "cash":
 		StageBuilder.add(g, StageBuilder.box(1.2, 0.55, 0.75), M.cash, Vector3(0, 0.3, 0))
 		StageBuilder.add(g, StageBuilder.box(0.25, 0.57, 0.77), M.band, Vector3(0, 0.3, 0))
-	if kind in ["apple", "chicken", "cash"]:
+	elif kind == "pipe":
+		var pp := StageBuilder.add(g, StageBuilder.cyl(0.09, 0.09, 2.2, 10), StageBuilder.mat("#a9b2c4", 0.25, 0.9), Vector3(0, 0.12, 0))
+		pp.rotation.z = PI / 2.0
+	elif kind == "knife":
+		StageBuilder.add(g, StageBuilder.box(0.9, 0.04, 0.16), StageBuilder.mat("#cfd6e2", 0.2, 0.95), Vector3(0.35, 0.06, 0))
+		StageBuilder.add(g, StageBuilder.box(0.4, 0.09, 0.12), StageBuilder.mat("#1a1416", 0.7), Vector3(-0.3, 0.06, 0))
+	if kind in ["apple", "chicken", "cash", "pipe", "knife"]:
 		var gl := MeshInstance3D.new()
 		gl.mesh = quad1
 		gl.material_override = _fx_mat(Color(1.6, 1.5, 1.0, 0.45), true, glow_tex, true)
@@ -1776,6 +2180,9 @@ func _make_fx_node(f) -> MeshInstance3D:
 			mi.mesh = quad1
 			mi.material_override = _fx_mat(Color(3.0, 2.2, 0.6, 1.0), true, ring_tex, false)
 			mi.rotation.x = -PI / 2.0
+		"burst":
+			mi.mesh = quad1
+			mi.material_override = _fx_mat(Color(3.0, 2.5, 1.4, 1.0), true, ring_tex, true)
 	dyn.add_child(mi)
 	return mi
 
@@ -1816,6 +2223,22 @@ func _sync_dyn() -> void:
 				var s3 := 2.0 + k * 20.0
 				f.node.scale = Vector3(s3, s3 * 0.55, 1)
 				m.albedo_color.a = 1.0 - k
+			"burst":
+				f.node.position = Vector3(f.x * S3, f.h * S3, (f.y - 178.0) * S3 + 0.7)
+				var s4 := 0.8 + k * 4.5
+				f.node.scale = Vector3(s4, s4, s4)
+				m.albedo_color.a = (1.0 - k) * 0.9
+	for sh in shots:
+		if sh.node == null:
+			var mi := MeshInstance3D.new()
+			mi.mesh = deb_box
+			mi.material_override = StageBuilder.emat("#dfeeff", 1.4)
+			mi.scale = Vector3(4.0, 0.3, 0.5)
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			dyn.add_child(mi)
+			sh.node = mi
+		sh.node.position = Vector3(sh.x * S3, sh.z * S3, (sh.y - 178.0) * S3)
+		sh.node.rotation.z = sh.t * 22.0
 
 
 func _render(dt: float) -> void:
@@ -1854,8 +2277,11 @@ func _render(dt: float) -> void:
 			cam_z = 16.0
 			look_y = 2.7
 			look_z = 0.0
+		title_view = cx / S3
 		_sync_fighter(jd, dt)
 		_sync_fighter(bd, dt)
+		for n in npcs:
+			_sync_fighter(n, dt)
 	else:
 		_show_stage(stage_i)
 		cx = (cam_x + W / 2.0) * S3
@@ -1874,6 +2300,8 @@ func _render(dt: float) -> void:
 			look_z = (my / ap.size() - 178.0) * S3
 		for e in enemies:
 			_sync_fighter(e, pdt)
+		for n in npcs:
+			_sync_fighter(n, pdt)
 		for pl in players:
 			if not pl.out:
 				_sync_fighter(pl, pdt)
@@ -1917,12 +2345,25 @@ func _bar(c: Control, x: float, y: float, w: float, h: float, v: float, col: Col
 
 
 func draw_hud(c: Control) -> void:
+	_draw_hud_main(c)
+	if scr_flash > 0.0:
+		_rect(c, 0, 0, W, H, Color(1, 1, 1, minf(0.85, scr_flash)))
+	if fade > 0.0:
+		_rect(c, 0, 0, W, H, Color(0, 0, 0, fade))
+
+
+func _draw_hud_main(c: Control) -> void:
 	if mode == "title":
 		_rect(c, 0, 0, W, H, Color(0.03, 0.02, 0.08, 0.3))
+		# l'enseigne grésille de temps en temps, comme un vrai néon fatigué
+		var ph := fmod(time, 4.3)
+		var fl := 1.0
+		if ph < 0.32:
+			fl = 0.25 if int(time * 28.0) % 3 == 0 else 1.0
 		for i in range(4, 0, -1):
-			var a := 0.12
+			var a := 0.12 * fl
 			_txt(c, "NÉON", W / 2.0 + i * 0.4, 64, Color(1, 0.31, 0.55, a), 1, 30, true)
-		_txt(c, "NÉON", W / 2.0, 64, Color("#ff4f8b"), 1, 30, true)
+		_txt(c, "NÉON", W / 2.0, 64, Color(1.0, 0.31, 0.55, 0.3 + 0.7 * fl), 1, 30, true)
 		_txt(c, "BOULEVARD", W / 2.0, 96, Color("#3fe0d0"), 1, 30, true)
 		_txt(c, "UNE NUIT, DEUX POINGS, UNE VILLE", W / 2.0, 110, Color("#e9e4f5"), 1, 6)
 		if int(time * 2.0) % 2 == 0:
@@ -1992,6 +2433,11 @@ func draw_hud(c: Control) -> void:
 			tag = "  J%d" % (pl.pid + 1)
 		var bw := 100.0 if duo else 110.0
 		_txt(c, pl.h.name + tag, bx, 13, Color("#3fe0d0") if i == 0 else Color("#ff8fb5"), 0, 8 if duo else 9, true)
+		if pl.chain >= 2 and not pl.out:
+			var pulse := clampf((pl.chain_t - 1.1) / 0.2, 0.0, 1.0)
+			_txt(c, "%d COUPS" % pl.chain, bx + bw, 13, Color("#ffd23f") if pl.chain < 10 else Color("#ff7a3c"), 2, 7.0 + pulse * 2.0, true)
+		if pl.weapon != "" and not pl.out:
+			_txt(c, "%s %d" % [WEAPONS[pl.weapon].name, pl.wuse], bx, 28.5, Color("#c9c9d6"), 0, 4.2, true)
 		if pl.out:
 			_txt(c, "HORS JEU", bx, 23, Color("#9a92b5"), 0, 6, true)
 		else:

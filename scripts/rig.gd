@@ -19,6 +19,8 @@ var arm_b: Dictionary
 var pony: Node3D = null
 var cur := {}
 var flash_state := "none"
+var weapon_kind := ""
+var weapon_node: Node3D = null
 
 
 func _init(lk: Dictionary) -> void:
@@ -258,6 +260,34 @@ func apply_pose(p: Dictionary, dt: float, snap := false) -> void:
 	tilt.position.y = c.ty * u
 	if pony:
 		pony.rotation.z = -0.45 + sin(Time.get_ticks_msec() * 0.007) * 0.12 - c.lean * 0.6
+
+
+## Arme dans la main avant : "pipe" (tuyau), "knife" (couteau) ou "" (aucune).
+func set_weapon(kind: String) -> void:
+	weapon_kind = kind
+	if weapon_node:
+		weapon_node.queue_free()
+		weapon_node = null
+	if kind == "":
+		return
+	weapon_node = Node3D.new()
+	weapon_node.position = Vector3(0.5 * u, -8.0 * u, 0)
+	arm_f.el.add_child(weapon_node)
+	var steel := StandardMaterial3D.new()
+	steel.albedo_color = Color("#a9b2c4")
+	steel.metallic = 0.9
+	steel.roughness = 0.25
+	var grip := StandardMaterial3D.new()
+	grip.albedo_color = Color("#1a1416")
+	grip.roughness = 0.7
+	if kind == "pipe":
+		_mi(_cyl(0.8 * u, 0.8 * u, 22.0 * u), steel, weapon_node, Vector3(0, -8.0 * u, 0))
+		_mi(_cyl(1.05 * u, 1.05 * u, 1.4 * u), steel, weapon_node, Vector3(0, -18.6 * u, 0))
+		_mi(_cyl(1.0 * u, 1.0 * u, 4.0 * u), grip, weapon_node, Vector3(0, 1.0 * u, 0))
+	else:
+		_mi(_box(1.0 * u, 4.0 * u, 1.3 * u), grip, weapon_node, Vector3(0, 0.6 * u, 0))
+		_mi(_box(1.8 * u, 0.5 * u, 2.2 * u), steel, weapon_node, Vector3(0, -1.6 * u, 0))
+		_mi(_box(0.35 * u, 8.0 * u, 1.5 * u), steel, weapon_node, Vector3(0.2 * u, -6.0 * u, 0))
 
 
 func set_flash(mode: String) -> void:

@@ -8,6 +8,15 @@ var bank := {}
 var idx := 0
 var muted := false
 var music: AudioStreamPlayer
+var tracks := {}
+var track := ""
+const TRACKS := {
+	# basse (notes MIDI, 16 pas), tempo, grosse caisse tous les N pas
+	"city": {"bass": [45, 45, 57, 45, 48, 48, 43, 43, 45, 45, 57, 45, 52, 50, 48, 47], "bpm": 128.0, "kick": 4},
+	"docks": {"bass": [40, 40, 52, 40, 43, 43, 47, 45, 40, 40, 52, 40, 48, 47, 45, 43], "bpm": 118.0, "kick": 4},
+	"metro": {"bass": [38, 50, 38, 41, 38, 50, 45, 43, 38, 50, 38, 41, 46, 45, 43, 41], "bpm": 136.0, "kick": 4},
+	"boss": {"bass": [45, 46, 45, 46, 45, 46, 48, 47, 45, 46, 45, 46, 52, 51, 50, 49], "bpm": 150.0, "kick": 2},
+}
 
 
 func _ready() -> void:
@@ -30,11 +39,18 @@ func _ready() -> void:
 		"go": _wav(_mix([_tone(523, 523, 0.08, 0.12, "square"), _tone(784, 784, 0.12, 0.12, "square", 0.09)])),
 		"warn": _wav(_mix([_tone(110, 110, 0.25, 0.2, "saw"), _tone(110, 110, 0.25, 0.2, "saw", 0.35)])),
 		"stomp": _wav(_mix([_noise(0.35, 0.8, 0.05), _tone(80, 30, 0.35, 0.6, "sine")])),
+		"yelp": _wav(_mix([_tone(620, 1180, 0.2, 0.13, "tri"), _tone(640, 1220, 0.2, 0.06, "square", 0.02)])),
+		"wpn": _wav(_mix([_tone(1400, 1400, 0.05, 0.1, "square"), _tone(2100, 2100, 0.08, 0.08, "tri", 0.04)])),
+		"wbreak": _wav(_mix([_noise(0.18, 0.5, 0.6), _tone(1800, 600, 0.16, 0.12, "saw")])),
+		"knife": _wav(_mix([_noise(0.1, 0.25, 0.9), _tone(2400, 1600, 0.08, 0.05, "tri")])),
+		"boom": _wav(_mix([_noise(0.6, 0.9, 0.04), _tone(70, 25, 0.6, 0.7, "sine")])),
 	}
 	music = AudioStreamPlayer.new()
 	music.volume_db = -9.0
 	add_child(music)
-	music.stream = _music()
+	for k in TRACKS:
+		tracks[k] = _music(TRACKS[k])
+	set_track("city")
 
 
 func play(n: String) -> void:
@@ -52,6 +68,16 @@ func set_music(on: bool) -> void:
 			music.play()
 	else:
 		music.stop()
+
+
+func set_track(n: String) -> void:
+	if n == track or not tracks.has(n):
+		return
+	track = n
+	var was := music.playing
+	music.stream = tracks[n]
+	if was and not muted:
+		music.play()
 
 
 func toggle_mute() -> void:
@@ -128,9 +154,10 @@ func _wav(a: PackedFloat32Array, loop := false) -> AudioStreamWAV:
 	return w
 
 
-func _music() -> AudioStreamWAV:
-	var bass := [45, 45, 57, 45, 48, 48, 43, 43, 45, 45, 57, 45, 52, 50, 48, 47]
-	var spb := 60.0 / 128.0 / 2.0
+func _music(cfg: Dictionary) -> AudioStreamWAV:
+	var bass: Array = cfg.bass
+	var kick: int = cfg.kick
+	var spb := 60.0 / float(cfg.bpm) / 2.0
 	var steps := 32
 	var n := int(spb * steps * RATE)
 	var out := PackedFloat32Array()
@@ -150,7 +177,7 @@ func _music() -> AudioStreamWAV:
 			var cut := 0.02 + 0.25 * exp(-t * 9.0)
 			lp += (saw - lp) * cut
 			var v := lp * 0.32 * exp(-t * 2.2)
-			if s % 4 == 0:
+			if s % kick == 0:
 				v += sin(TAU * (40.0 + 80.0 * exp(-t * 30.0)) * t) * 0.55 * exp(-t * 14.0)
 			if s % 2 == 1 and t < 0.05:
 				var r := randf() * 2.0 - 1.0
