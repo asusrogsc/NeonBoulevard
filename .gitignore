@@ -1,0 +1,6 @@
+# Cache et réglages locaux de Godot (regénérés automatiquement)
+.godot/
+
+# Exports
+/export/
+*.tmp

@@ -240,6 +240,15 @@ func _ready() -> void:
 	_show_stage(0)
 
 
+func _exit_tree() -> void:
+	# Les décors en cache retirés de l'arbre ne sont pas libérés automatiquement
+	for k in built:
+		var n: Node = built[k].node
+		if is_instance_valid(n) and n.get_parent() == null:
+			n.free()
+	built.clear()
+
+
 func _dummy(hero: String, face: float, ph: float) -> Ent:
 	var e := Ent.new()
 	e.look = LOOKS[HEROES[hero].look]
@@ -322,7 +331,7 @@ func _set_quality(hq: bool) -> void:
 		var env: Environment = built[kk].env
 		env.ssr_enabled = hq
 		env.ssao_enabled = hq
-	get_viewport().msaa_3d = Viewport.MSAA_4X if hq else Viewport.MSAA_DISABLED
+	get_viewport().msaa_3d = Viewport.MSAA_2X if hq else Viewport.MSAA_DISABLED
 
 
 # ------------------------------------------------------------------ OUTILS
@@ -1215,6 +1224,17 @@ func _update(dt: float) -> void:
 				for e in enemies:
 					_free_rig(e)
 				enemies = []
+				# Vide les caisses, objets et effets restés de la partie
+				for c in dyn.get_children():
+					c.queue_free()
+				props = []
+				items = []
+				fxs = []
+				texts = []
+				spawn_q = []
+				banner = null
+				go_t = 0.0
+				last_foe = null
 			return
 		"pause":
 			return

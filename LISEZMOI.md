@@ -1,10 +1,10 @@
-# Néon Boulevard (Godot 4)
+# Néon Boulevard (Godot 4.7)
 
 Beat'em up 2.5D façon Streets of Rage : deux héros (Jade et Bruno), deux stages (Boulevard Néon, Les Docks), des vagues d'ennemis et un boss.
 Tout est généré par le code : les modèles 3D, les décors, les sons et la musique. Le projet ne contient aucun fichier image ou audio.
 
 ## Lancer le jeu
-1. Ouvre Godot 4 (4.3 ou plus récent).
+1. Ouvre Godot 4.7 (ou plus récent).
 2. Dans le gestionnaire de projets, clique sur **Importer**, puis choisis le fichier `project.godot` de ce dossier.
 3. Appuie sur **F5** (ou sur le bouton ▶ en haut à droite).
 
