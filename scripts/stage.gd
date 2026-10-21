@@ -166,8 +166,8 @@ static func city(L: float) -> Dictionary:
 	add(root, box(WW, 0.32, 4.2), sw, Vector3(L / 2.0, 0.16, -5.35))
 	add(root, box(WW, 0.34, 0.3), mat("#6a6382", 0.6), Vector3(L / 2.0, 0.17, -3.3))
 	var pm := mat("#0d0b16", 0.02, 0.6)
-	for i in 14:
-		var pd := add(root, cyl(1.0, 1.0, 0.01, 24), pm, Vector3(R.randf() * L, 0.006, -2.5 + R.randf() * 6.0), false)
+	for i in 24:
+		var pd := add(root, cyl(1.0, 1.0, 0.01, 24), pm, Vector3(R.randf() * L, 0.006, -2.5 + R.randf() * 13.0), false)
 		pd.scale = Vector3(1.5 + R.randf() * 2.5, 1, 0.6 + R.randf() * 0.6)
 
 	var signs := [["RAMEN 24H", "#ff4f8b"], ["LAVERIE", "#3fe0d0"], ["BAR LUNE", "#ffd23f"], ["ARCADE", "#b47dff"],

@@ -1,18 +1,19 @@
 extends Node3D
 ## NÉON BOULEVARD — beat'em up 2.5D façon Streets of Rage.
-## Logique en "px de jeu" : x = avancée, y = profondeur (150..236), z = hauteur.
+## Logique en "px de jeu" : x = avancée, y = profondeur (150..280), z = hauteur.
 ## Le rendu convertit en 3D : 1 unité = 10 px.
 
 const W := 384.0
 const H := 216.0
 const TOP := 150.0
-const BOT := 236.0  # profondeur jouable : de TOP (fond) à BOT (premier plan)
+const BOT := 280.0  # profondeur jouable : de TOP (fond) à BOT (premier plan)
 const GRAV := 620.0
 const S3 := 0.1
 const K := 5.0
 
 const LOOKS := {
-	"jade": {"skin": "#eab48c", "hair": "#1c1730", "hs": "pony", "top": "#1db3a6", "sleeve": 1, "pants": "#2b2f52", "shoe": "#f1efe8", "acc": "#ff5a3c", "bulk": 1.0, "s": 1.0},
+	# "model" : personnage 3D importé (s'il manque, le modèle en code ci-dessous est utilisé)
+	"jade": {"skin": "#eab48c", "hair": "#1c1730", "hs": "pony", "top": "#1db3a6", "sleeve": 1, "pants": "#2b2f52", "shoe": "#f1efe8", "acc": "#ff5a3c", "bulk": 1.0, "s": 1.0, "model": "res://models/jade.glb", "model_scale": 1.1},
 	"bruno": {"skin": "#b47448", "hair": "#24160c", "hs": "buzz", "top": "#e3dccb", "sleeve": 0, "pants": "#38598c", "shoe": "#3a281c", "acc": "#e0363a", "bulk": 1.22, "s": 1.06, "band": 1},
 	"punk": {"skin": "#d9a07a", "hair": "#ff3f9e", "hs": "mohawk", "top": "#5d2b8a", "sleeve": 0, "pants": "#23212b", "shoe": "#121016", "acc": "#c9c9d6", "bulk": 1.0, "s": 1.0},
 	"punk2": {"skin": "#c98e66", "hair": "#ffd23f", "hs": "mohawk", "top": "#2a5f8a", "sleeve": 0, "pants": "#2b2420", "shoe": "#121016", "acc": "#c9c9d6", "bulk": 1.0, "s": 1.0},
@@ -530,7 +531,7 @@ func _start_stage(i: int) -> void:
 	for k in players.size():
 		var pl = players[k]
 		pl.x = 50.0 - k * 14.0
-		pl.y = 182.0 + k * 26.0
+		pl.y = 196.0 + k * 34.0
 		pl.z = 0.0
 		pl.vx = 0.0
 		pl.vz = 0.0
@@ -956,7 +957,7 @@ func _upd_player(dt: float) -> void:
 				_set_p("jump")
 				P.vz = 215.0
 				P.vx = ix * spd * 1.1
-				P.vy = iy * spd * 0.45
+				P.vy = iy * spd * 0.6
 				P.kicked = false
 				_sfx("jump")
 			elif In.pPunch:
@@ -967,7 +968,7 @@ func _upd_player(dt: float) -> void:
 				P.moving = true
 				P.st = "walk"
 				P.x += ix * spd * dt
-				P.y += iy * spd * 0.6 * dt
+				P.y += iy * spd * 0.8 * dt
 				P.wph += dt * 11.0
 				if ix != 0 and float(ix) == P.face:
 					for e in enemies:
@@ -1419,7 +1420,7 @@ func _upd_enemies(dt: float) -> void:
 					e.x += signf(dx2) * minf(absf(dx2), sp * dt)
 					e.moving = true
 				if absf(dy2) > 2.0:
-					e.y += signf(dy2) * minf(absf(dy2), sp * 0.6 * dt)
+					e.y += signf(dy2) * minf(absf(dy2), sp * 0.8 * dt)
 					e.moving = true
 				if e.moving:
 					e.wph += dt * (7.0 if boss else 9.0)
@@ -2066,10 +2067,10 @@ func _make_rain() -> void:
 
 func _sync_fighter(e, dt: float, vis := true) -> void:
 	if e.rig == null:
-		e.rig = Rig.new(e.look)
+		e.rig = _make_rig(e.look)
 		add_child(e.rig)
 		e.rig.apply_pose(Pose.get_pose(e, time), dt, true)
-	var r: Rig = e.rig
+	var r = e.rig
 	if r.weapon_kind != e.weapon:
 		r.set_weapon(e.weapon)
 	r.position = Vector3(e.x * S3, e.z * S3, (e.y - 178.0) * S3)
@@ -2088,6 +2089,16 @@ func _sync_fighter(e, dt: float, vis := true) -> void:
 	if e.inv > 0 and e.st != "fall" and int(time * 16.0) % 2 == 1:
 		v = false
 	r.visible = v
+
+
+func _make_rig(lk: Dictionary) -> Node3D:
+	var path: String = lk.get("model", "")
+	if path != "" and ResourceLoader.exists(path):
+		var mr := ModelRig.new(lk)
+		if mr.ok:
+			return mr
+		mr.free()
+	return Rig.new(lk)
 
 
 func _make_prop(kind: String) -> Node3D:

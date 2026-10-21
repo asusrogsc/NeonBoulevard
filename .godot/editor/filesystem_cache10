@@ -1,13 +1,32 @@
 78098b89c88a74ebe8c20117b8754620
-::res://::1792606535
+::res://::1792611686
 gitignore.txt::TextFile::-1::1792601909::0::1::::<><><>0<>0<><>::
 LISEZMOI.md::TextFile::-1::1792606484::0::1::::<><><>0<>0<><>::
 main.tscn::PackedScene::-1::1792435082::0::1::::<><><>0<>0<><>::res://scripts/main.gd
-::res://models/::1792600799
-::res://scripts/::1792606511
+::res://models/::1792611627
+jade.glb::PackedScene::8936153660252408744::1792611609::1792611691::1::::<><><>0<>0<>6267621c1999ed0ba6eb1c9fd2b36fef<>res://.godot/imported/jade.glb-2bac86759163df59a55470c24272dd2a.scn::uid://bim87wierupbu::::res://models/jade_Fingernails_albedo.webp<>uid://csrci6c3s1pbd::::res://models/jade_Torso_albedo.webp<>uid://basynl3i4awnw::::res://models/jade_Pupils_albedo.webp<>uid://c0k8ittk44dc7::::res://models/jade_Face_albedo.webp<>uid://e13rfbq1ryaq::::res://models/jade_Lips_albedo.webp<>uid://sppgvtqjnde8::::res://models/jade_Teeth_albedo.webp<>uid://cgl05hi2gvsip::::res://models/jade_Ears_albedo.webp<>uid://7wsm2c7jhydq::::res://models/jade_Legs_albedo.webp<>uid://jk25jccubfh4::::res://models/jade_Torso_albedo2.webp<>uid://cvbmvrhng5hmg::::res://models/jade_Frame Pins_albedo.webp<>uid://d32nudocmv3cp::::res://models/jade_Back_albedo.webp<>uid://df40rd7tdt1ah::::res://models/jade_Cap_albedo.webp<>uid://dslwpj5wo8pp5::::res://models/jade_InSole_albedo.webp<>uid://d4aely1ocme7f::::res://models/jade_Upper_1_albedo.webp<>uid://cdydnolosdoov::::res://models/jade_Panties_albedo.webp<>uid://bp1882ghwfn15::::res://models/jade_Skirt_albedo.webp<>uid://tjv2eikrprjk::::res://models/jade_Top_albedo.webp
+jade_Fingernails_albedo.webp::CompressedTexture2D::2974765940089728802::1792611686::1792611691::1::::<><><>0<>0<>dc729e11d5cfd556359ac3c64cf74a95<>res://.godot/imported/jade_Fingernails_albedo.webp-941a206d82efc7d4f10c65515dda44c2.s3tc.ctex::
+jade_Torso_albedo.webp::CompressedTexture2D::6071472327637321809::1792611686::1792611691::1::::<><><>0<>0<>4fb8aad2703de6218b744f8c9262fd07<>res://.godot/imported/jade_Torso_albedo.webp-ac6115d875b533d7bce2ac58223c6327.s3tc.ctex::
+jade_Pupils_albedo.webp::CompressedTexture2D::2425060527826974072::1792611687::1792611691::1::::<><><>0<>0<>3ef4a3f0af19247163e310d472a68af9<>res://.godot/imported/jade_Pupils_albedo.webp-fcbc49dcba19d2c2376cf26adcc6e5fe.s3tc.ctex::
+jade_Face_albedo.webp::CompressedTexture2D::6550225210779329960::1792611687::1792611691::1::::<><><>0<>0<>4e749d9445571128f533a63df8a75fbe<>res://.godot/imported/jade_Face_albedo.webp-7ac0b8ea0e7b07a08dc600e0351f7934.s3tc.ctex::
+jade_Lips_albedo.webp::CompressedTexture2D::336159895375490520::1792611687::1792611691::1::::<><><>0<>0<>06887da22814e2e298d9dc144d455f00<>res://.godot/imported/jade_Lips_albedo.webp-05f53817387b6247018ea3f8f2045cf8.s3tc.ctex::
+jade_Teeth_albedo.webp::CompressedTexture2D::1295287454531551213::1792611687::1792611691::1::::<><><>0<>0<>9b9b32901a34fb1f055720cdb98e0dc4<>res://.godot/imported/jade_Teeth_albedo.webp-46cbe31aa580850cdf2315301b2742fb.s3tc.ctex::
+jade_Ears_albedo.webp::CompressedTexture2D::5218254464402869711::1792611687::1792611691::1::::<><><>0<>0<>b53c4032e35b23e725c7a5551c579daf<>res://.godot/imported/jade_Ears_albedo.webp-819a871b9e1e6c2277c7ebb3d2dc3134.s3tc.ctex::
+jade_Legs_albedo.webp::CompressedTexture2D::2292575065089332766::1792611688::1792611691::1::::<><><>0<>0<>3248a57e684b6edb51ee0faa3e635066<>res://.godot/imported/jade_Legs_albedo.webp-7ed4fcee5023e4e31e0ee03d84e8f03d.s3tc.ctex::
+jade_Torso_albedo2.webp::CompressedTexture2D::654036778822133671::1792611688::1792611691::1::::<><><>0<>0<>c1973aa209f688cf799d7ee38a239147<>res://.godot/imported/jade_Torso_albedo2.webp-1d449e32db003e63ed35b48b08590b51.s3tc.ctex::
+jade_Back_albedo.webp::CompressedTexture2D::9181113088392962795::1792611688::1792611691::1::::<><><>0<>0<>1d568a52a80401b9bed79fc3494a72be<>res://.godot/imported/jade_Back_albedo.webp-f6df6ceacde3c0e77501f7463e41f75a.s3tc.ctex::
+jade_Cap_albedo.webp::CompressedTexture2D::7571621715324594071::1792611688::1792611691::1::::<><><>0<>0<>50a06dbec83923931b359e022d5b175b<>res://.godot/imported/jade_Cap_albedo.webp-a1c232846d887692af28565bfdbd5981.s3tc.ctex::
+jade_InSole_albedo.webp::CompressedTexture2D::8446732472681865984::1792611688::1792611691::1::::<><><>0<>0<>3be3cce170c9f4096f9efa4314c98978<>res://.godot/imported/jade_InSole_albedo.webp-94279587eb31f6a4046694ea3b7176e4.s3tc.ctex::
+jade_Upper_1_albedo.webp::CompressedTexture2D::9195002329650826261::1792611689::1792611691::1::::<><><>0<>0<>f34e6606c6227567755a8f2b8eb815fa<>res://.godot/imported/jade_Upper_1_albedo.webp-49ef464eef63583edbfe9cd5c3389e55.s3tc.ctex::
+jade_Panties_albedo.webp::CompressedTexture2D::5033159083676832097::1792611689::1792611691::1::::<><><>0<>0<>08e114f96881735c2c8e3af6fed5bd8c<>res://.godot/imported/jade_Panties_albedo.webp-f64378eafd8de3c4fa952b4580413131.s3tc.ctex::
+jade_Skirt_albedo.webp::CompressedTexture2D::3494991179576236078::1792611689::1792611691::1::::<><><>0<>0<>2f632d7d75ce1b2d59afd33646f3a74a<>res://.godot/imported/jade_Skirt_albedo.webp-e9614df72e5d6df75fe815276b1b8bdd.s3tc.ctex::
+jade_Top_albedo.webp::CompressedTexture2D::1353490925122198600::1792611689::1792611691::1::::<><><>0<>0<>72472386e456c97f542735efc9519a8d<>res://.godot/imported/jade_Top_albedo.webp-fcd192ba0baebc28d5ff2edadbce2a48.s3tc.ctex::
+jade_Frame Pins_albedo.webp::CompressedTexture2D::6249638471434591850::1792611689::1792611691::1::::<><><>0<>0<>af9b31d80643c48a47376a9a24d5c566<>res://.godot/imported/jade_Frame Pins_albedo.webp-db4fcb59bd699a370dccbab5ed57838f.s3tc.ctex::
+::res://scripts/::1792611672
 hud.gd::GDScript::3267460290045559860::1792435085::0::1::::Hud<>Control<><>0<>0<><>::
-main.gd::GDScript::8728336770053759493::1792606482::0::1::::<>Node3D<><>0<>0<><>::
+main.gd::GDScript::8728336770053759493::1792611611::0::1::::<>Node3D<><>0<>0<><>::
+model_rig.gd::GDScript::8406504258196660160::1792611613::0::1::::ModelRig<>Node3D<><>0<>0<><>::
 pose.gd::GDScript::8830965607652299345::1792606483::0::1::::Pose<>RefCounted<><>0<>0<><>::
 rig.gd::GDScript::6449738052907785188::1792606483::0::1::::Rig<>Node3D<><>0<>0<><>::
 sfx.gd::GDScript::7562075513939939883::1792606483::0::1::::Sfx<>Node<><>0<>0<><>::
-stage.gd::GDScript::3942521409042694994::1792606484::0::1::::StageBuilder<>RefCounted<><>0<>0<><>::
+stage.gd::GDScript::3942521409042694994::1792608393::0::1::::StageBuilder<>RefCounted<><>0<>0<><>::
