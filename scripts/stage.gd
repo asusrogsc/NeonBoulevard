@@ -108,6 +108,109 @@ static func neon(parent: Node3D, text: String, pos: Vector3, col: Color) -> Labe
 	return l
 
 
+## Dégradé vertical (haut opaque -> bas transparent) pour les reflets et les cônes de lumière
+static func fade_tex(a0: float, a1: float) -> GradientTexture2D:
+	var g := Gradient.new()
+	g.set_color(0, Color(1, 1, 1, a0))
+	g.set_color(1, Color(1, 1, 1, a1))
+	var t := GradientTexture2D.new()
+	t.gradient = g
+	t.fill_from = Vector2(0.5, 0.0)
+	t.fill_to = Vector2(0.5, 1.0)
+	t.width = 16
+	t.height = 128
+	return t
+
+
+static func glow_mat(col: Color, tex: Texture2D, energy: float) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.albedo_texture = tex
+	m.albedo_color = Color(col.r * energy, col.g * energy, col.b * energy, 1.0)
+	m.disable_receive_shadows = true
+	return m
+
+
+static var _streak: ImageTexture = null
+
+## Texture de reflet mouillé : traînées verticales irrégulières, bords fondus, fondu vers la caméra
+static func streak_tex() -> ImageTexture:
+	if _streak:
+		return _streak
+	var w := 96
+	var h := 192
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	var n := FastNoiseLite.new()
+	n.seed = 42
+	n.frequency = 0.09
+	for x in w:
+		var u := float(x) / (w - 1)
+		var side := pow(clampf(1.0 - absf(u * 2.0 - 1.0), 0.0, 1.0), 1.6)
+		var col_n := 0.55 + 0.45 * n.get_noise_2d(x * 3.0, 0.0)
+		for y in h:
+			var v := float(y) / (h - 1)
+			var along := pow(1.0 - v, 1.1) * smoothstep(0.0, 0.05, v)
+			var ripple := 0.75 + 0.25 * n.get_noise_2d(x * 1.5, y * 0.35)
+			var a := clampf(side * along * col_n * ripple, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1, 1, 1, a))
+	_streak = ImageTexture.create_from_image(img)
+	return _streak
+
+
+## Reflet d'une source lumineuse sur la chaussée mouillée : une traînée qui descend vers la caméra
+static func road_reflection(parent: Node3D, x: float, width: float, col: Color, z0: float, length: float, energy: float) -> MeshInstance3D:
+	var p := PlaneMesh.new()
+	p.size = Vector2(width, length)
+	var mi := add(parent, p, glow_mat(col, streak_tex(), energy), Vector3(x, 0.012, z0 + length / 2.0), false)
+	return mi
+
+
+const CONE_SHADER := """
+shader_type spatial;
+render_mode unshaded, blend_add, cull_disabled, depth_draw_never, shadows_disabled;
+uniform vec3 color : source_color = vec3(1.0, 0.85, 0.6);
+uniform float strength = 0.3;
+void fragment() {
+	// bords fondus (vu de profil le cône s'efface) et fondu vers le sol
+	float facing = pow(abs(dot(normalize(NORMAL), normalize(VIEW))), 1.6);
+	float down = pow(1.0 - UV.y, 1.3) * smoothstep(0.0, 0.08, UV.y);
+	ALBEDO = color * strength * facing * down;
+}
+"""
+
+
+## Cône de lumière visible sous un lampadaire
+static func light_cone(parent: Node3D, pos: Vector3, h: float, r: float, col: Color, energy: float) -> void:
+	var c := CylinderMesh.new()
+	c.top_radius = 0.22
+	c.bottom_radius = r
+	c.height = h
+	c.cap_top = false
+	c.cap_bottom = false
+	c.radial_segments = 32
+	var cm := ShaderMaterial.new()
+	cm.shader = Shader.new()
+	cm.shader.code = CONE_SHADER
+	cm.set_shader_parameter("color", col)
+	cm.set_shader_parameter("strength", 0.7 * energy)
+	add(parent, c, cm, pos - Vector3(0, h / 2.0, 0), false)
+	# tache de lumière au sol
+	var pool := PlaneMesh.new()
+	pool.size = Vector2(r * 2.2, r * 1.6)
+	var g := Gradient.new()
+	g.set_color(0, Color(1, 1, 1, 0.35))
+	g.set_color(1, Color(1, 1, 1, 0.0))
+	var gt := GradientTexture2D.new()
+	gt.gradient = g
+	gt.fill = GradientTexture2D.FILL_RADIAL
+	gt.fill_from = Vector2(0.5, 0.5)
+	gt.fill_to = Vector2(1.0, 0.5)
+	add(parent, pool, glow_mat(col, gt, energy * 0.8), Vector3(pos.x, 0.015, pos.z + 1.2), false)
+
+
 ## Enseigne qui pourra grésiller (animée par gfx.gd)
 static func flicker(labels: Array, mats: Array, lights: Array) -> Dictionary:
 	for m in mats:
@@ -190,9 +293,10 @@ static func city(L: float) -> Dictionary:
 	R.seed = 7
 	var WW := L + 160.0
 	# chaussée mouillée : la rugosité varie pour faire des zones luisantes
-	var rm := mat(Color(1, 1, 1), 1.0, 0.3)
-	rm.albedo_texture = noise_tex(0.09, 3, Color("#1c1926"), Color("#3c3650"))
-	rm.roughness_texture = noise_tex(0.012, 11, Color(0.04, 0.04, 0.04), Color(0.85, 0.85, 0.85))
+	var rm := mat(Color(1, 1, 1), 1.0, 0.1)
+	rm.albedo_texture = noise_tex(0.09, 3, Color("#15131d"), Color("#2c2840"))
+	rm.roughness_texture = noise_tex(0.012, 11, Color(0.03, 0.03, 0.03), Color(0.42, 0.42, 0.42))
+	rm.metallic_specular = 0.7
 	rm.uv1_scale = Vector3(WW / 12.0, 48.0 / 12.0, 1)
 	var road := PlaneMesh.new()
 	road.size = Vector2(WW, 48)
@@ -265,8 +369,10 @@ static func city(L: float) -> Dictionary:
 		add(root, box(9.0, 0.08, 0.08), tube, Vector3(bx + 6.4, 6.42, -7.02), false)
 		add(root, box(9.0, 0.08, 0.08), tube, Vector3(bx + 6.4, 4.78, -7.02), false)
 		var lb := neon(root, s[0], Vector3(bx + 6.4, 5.6, -7.03), sc)
+		road_reflection(root, bx + 6.4, 7.5, sc, -3.1, 13.0, 1.9)
+		road_reflection(root, bx + 4.2, 6.0, Color(shopm[i % 3].albedo_color), -3.1, 7.0, 0.7)
 		var ol := omni(root, Vector3(bx + 6.4, 5.0, -5.4), sc, 2.2, 14.0)
-		ol.light_volumetric_fog_energy = 1.5
+		ol.light_volumetric_fog_energy = 2.5
 		if i % 3 == 1:
 			neons.append(flicker([lb], [tube], [ol]))
 		if i % 3 == 1:
@@ -281,8 +387,10 @@ static func city(L: float) -> Dictionary:
 			sl.position = Vector3(lx - 1.6, 8.3, -4.2)
 			sl.rotation.x = -PI / 2.0
 			sl.light_color = Color("#ffd9a0")
-			sl.light_energy = 5.0
-			sl.light_volumetric_fog_energy = 3.5
+			sl.light_energy = 7.0
+			sl.light_volumetric_fog_energy = 9.0
+			light_cone(root, Vector3(lx - 1.6, 8.3, -4.2), 8.3, 3.2, Color("#ffd9a0"), 0.9)
+			road_reflection(root, lx - 1.6, 2.4, Color("#ffd9a0"), -2.8, 11.0, 1.8)
 			sl.spot_range = 14.0
 			sl.spot_angle = 42.0
 			root.add_child(sl)
@@ -340,7 +448,7 @@ static func city(L: float) -> Dictionary:
 		"node": root,
 		"env": make_env("#070514", "#7a2456", "#0b0814", "#2a1440", 0.011, 0.55),
 		"sun": Color("#bfd0ff"), "sun_energy": 0.55, "rain": true, "neons": neons,
-		"vfog": {"density": 0.028, "albedo": Color("#b9a8e0"), "emission": Color("#140826")},
+		"vfog": {"density": 0.009, "albedo": Color("#a898d0"), "emission": Color("#05020a")},
 	}
 
 
@@ -466,7 +574,7 @@ static func metro(L: float) -> Dictionary:
 	return {
 		"node": root, "env": env,
 		"sun": Color("#cfe8ff"), "sun_energy": 0.3, "rain": false, "neons": mneons,
-		"vfog": {"density": 0.022, "albedo": Color("#c8e8dc"), "emission": Color("#04100c")},
+		"vfog": {"density": 0.008, "albedo": Color("#c0e0d4"), "emission": Color("#010403")},
 	}
 
 
@@ -528,8 +636,9 @@ static func docks(L: float) -> Dictionary:
 		sl.position = Vector3(lx + 1.8, 9.6, -4.4)
 		sl.rotation.x = -PI / 2.0
 		sl.light_color = Color("#ffb46a")
-		sl.light_energy = 6.0
-		sl.light_volumetric_fog_energy = 3.0
+		sl.light_energy = 7.0
+		sl.light_volumetric_fog_energy = 8.0
+		light_cone(root, Vector3(lx + 1.8, 9.6, -4.4), 9.6, 3.6, Color("#ffb46a"), 0.8)
 		sl.spot_range = 16.0
 		sl.spot_angle = 45.0
 		root.add_child(sl)
@@ -584,5 +693,5 @@ static func docks(L: float) -> Dictionary:
 		"env": make_env("#04101a", "#d0603a", "#0b0d10", "#2a3a44", 0.008, 0.6),
 		"sun": Color("#ffd2b0"), "sun_energy": 0.7, "rain": false,
 		"neons": [flicker([q9], [], [q9l])],
-		"vfog": {"density": 0.016, "albedo": Color("#e8c4a8"), "emission": Color("#120a06")},
+		"vfog": {"density": 0.006, "albedo": Color("#e0c0a8"), "emission": Color("#040201")},
 	}

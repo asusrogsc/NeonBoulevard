@@ -93,7 +93,7 @@ func apply() -> void:
 	var raining: bool = stage.get("rain", false)
 	splash.emitting = raining and level >= 1
 	splash.visible = splash.emitting
-	splash.amount = [60, 140, 260, 420][level]
+	splash.amount = [120, 300, 600, 900][level]
 	post.visible = level >= 1 or crt
 	post_mat.set_shader_parameter("vignette", 0.0 if level == 0 else 0.38)
 	post_mat.set_shader_parameter("grain", 0.035 if level >= 2 else 0.0)
@@ -107,13 +107,18 @@ func _apply_env(B: Dictionary) -> void:
 	env.glow_enabled = level >= 1
 	env.ssao_enabled = level >= 2
 	env.ssr_enabled = level >= 2
-	env.ssr_max_steps = 48 if level == 2 else 96
+	env.ssr_max_steps = 72 if level == 2 else 128
+	env.ssr_fade_in = 0.08
+	env.ssr_fade_out = 2.2
+	env.ssr_depth_tolerance = 0.4
 	env.ssil_enabled = level >= 3
 	env.ssao_intensity = 1.6
 	# étalonnage : un peu plus de contraste et de saturation pour l'ambiance néon
 	env.adjustment_enabled = true
-	env.adjustment_contrast = 1.07
-	env.adjustment_saturation = 1.14
+	env.adjustment_contrast = 1.12
+	env.adjustment_saturation = 1.18
+	env.glow_intensity = 1.1
+	env.glow_bloom = 0.06
 	var vf: Dictionary = B.get("vfog", {})
 	env.volumetric_fog_enabled = level >= 2 and not vf.is_empty()
 	if not vf.is_empty():
@@ -121,7 +126,7 @@ func _apply_env(B: Dictionary) -> void:
 		env.volumetric_fog_albedo = vf.get("albedo", Color(0.8, 0.8, 0.9))
 		env.volumetric_fog_emission = vf.get("emission", Color(0.02, 0.01, 0.04))
 		env.volumetric_fog_emission_energy = 1.0
-		env.volumetric_fog_anisotropy = 0.55
+		env.volumetric_fog_anisotropy = 0.7
 		env.volumetric_fog_length = 80.0
 		env.volumetric_fog_detail_spread = 1.6
 		env.volumetric_fog_sky_affect = 0.25
@@ -161,35 +166,38 @@ func update(dt: float, cx: float) -> void:
 func _make_splash() -> GPUParticles3D:
 	var p := GPUParticles3D.new()
 	p.amount = 260
-	p.lifetime = 0.32
+	p.lifetime = 0.14
 	var pm := ParticleProcessMaterial.new()
 	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
 	pm.emission_box_extents = Vector3(22, 0, 9)
-	pm.gravity = Vector3.ZERO
-	pm.initial_velocity_min = 0.0
-	pm.initial_velocity_max = 0.0
+	pm.gravity = Vector3(0, -9.0, 0)
+	pm.direction = Vector3(0, 1, 0)
+	pm.spread = 55.0
+	pm.initial_velocity_min = 1.2
+	pm.initial_velocity_max = 2.2
 	var sc := Curve.new()
-	sc.add_point(Vector2(0, 0.15))
-	sc.add_point(Vector2(1, 1.0))
+	sc.add_point(Vector2(0, 1.0))
+	sc.add_point(Vector2(1, 0.3))
 	var sct := CurveTexture.new()
 	sct.curve = sc
 	pm.scale_curve = sct
 	var g := Gradient.new()
-	g.set_color(0, Color(1, 1, 1, 0.7))
+	g.set_color(0, Color(1, 1, 1, 0.9))
 	g.set_color(1, Color(1, 1, 1, 0.0))
 	var gt := GradientTexture1D.new()
 	gt.gradient = g
 	pm.color_ramp = gt
 	p.process_material = pm
-	var q := PlaneMesh.new()
-	q.size = Vector2(0.42, 0.42)
+	var q := QuadMesh.new()
+	q.size = Vector2(0.05, 0.12)
 	var m := StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	m.vertex_color_use_as_albedo = true
-	m.albedo_texture = game.ring_tex
-	m.albedo_color = Color(0.75, 0.82, 1.0, 0.55)
+	m.albedo_texture = game.glow_tex
+	m.albedo_color = Color(0.8, 0.86, 1.0, 0.8)
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 	q.material = m
 	p.draw_pass_1 = q
 	p.visibility_aabb = AABB(Vector3(-30, -2, -14), Vector3(60, 4, 28))

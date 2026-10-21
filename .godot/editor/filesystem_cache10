@@ -1,5 +1,5 @@
 78098b89c88a74ebe8c20117b8754620
-::res://::1792613803
+::res://::1792615354
 gitignore.txt::TextFile::-1::1792601909::0::1::::<><><>0<>0<><>::
 LISEZMOI.md::TextFile::-1::1792613759::0::1::::<><><>0<>0<><>::
 main.tscn::PackedScene::-1::1792435082::0::1::::<><><>0<>0<><>::res://scripts/main.gd
@@ -22,12 +22,12 @@ jade_Top_albedo.webp::CompressedTexture2D::1353490925122198600::1792611689::1792
 jade_Torso_albedo2.webp::CompressedTexture2D::654036778822133671::1792611688::1792611691::1::::<><><>0<>0<>c1973aa209f688cf799d7ee38a239147<>res://.godot/imported/jade_Torso_albedo2.webp-1d449e32db003e63ed35b48b08590b51.s3tc.ctex::
 jade_Torso_albedo.webp::CompressedTexture2D::6071472327637321809::1792611686::1792611691::1::::<><><>0<>0<>4fb8aad2703de6218b744f8c9262fd07<>res://.godot/imported/jade_Torso_albedo.webp-ac6115d875b533d7bce2ac58223c6327.s3tc.ctex::
 jade_Upper_1_albedo.webp::CompressedTexture2D::9195002329650826261::1792611689::1792611691::1::::<><><>0<>0<>f34e6606c6227567755a8f2b8eb815fa<>res://.godot/imported/jade_Upper_1_albedo.webp-49ef464eef63583edbfe9cd5c3389e55.s3tc.ctex::
-::res://scripts/::1792613789
-gfx.gd::GDScript::265792816960884464::1792613750::0::1::::Gfx<>Node<><>0<>0<><>::
+::res://scripts/::1792615328
+gfx.gd::GDScript::265792816960884464::1792615318::0::1::::Gfx<>Node<><>0<>0<><>::
 hud.gd::GDScript::3267460290045559860::1792435085::0::1::::Hud<>Control<><>0<>0<><>::
 main.gd::GDScript::8728336770053759493::1792613752::0::1::::<>Node3D<><>0<>0<><>::
 model_rig.gd::GDScript::8406504258196660160::1792613757::0::1::::ModelRig<>Node3D<><>0<>0<><>::
 pose.gd::GDScript::8830965607652299345::1792606483::0::1::::Pose<>RefCounted<><>0<>0<><>::
 rig.gd::GDScript::6449738052907785188::1792613755::0::1::::Rig<>Node3D<><>0<>0<><>::
 sfx.gd::GDScript::7562075513939939883::1792606483::0::1::::Sfx<>Node<><>0<>0<><>::
-stage.gd::GDScript::3942521409042694994::1792613753::0::1::::StageBuilder<>RefCounted<><>0<>0<><>::
+stage.gd::GDScript::3942521409042694994::1792615316::0::1::::StageBuilder<>RefCounted<><>0<>0<><>::
