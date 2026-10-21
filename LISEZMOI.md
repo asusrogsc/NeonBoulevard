@@ -59,7 +59,9 @@ En solo, le joueur peut utiliser les deux jeux de touches. En coop, la manette 1
 - `scripts/main.gd` : boucle de jeu, combats, IA des ennemis et du partenaire, zones, caméra, HUD
 - `scripts/pose.gd` : les poses d'animation (angles des articulations)
 - `scripts/rig.gd` : le modèle 3D articulé des personnages
-- `scripts/stage.gd` : la construction des décors et de l'éclairage
+- `scripts/stage.gd` : la construction des décors et de l'éclairage (docks, métro, outils communs)
+- `scripts/city.gd` : le Boulevard Néon détaillé (façades, devantures, escaliers de secours, mobilier urbain)
+- `scripts/shaders.gd` : les matières procédurales (briques, crépi, asphalte, dalles, fenêtres avec pièces en perspective, tôle ondulée, eau)
 - `scripts/sfx.gd` : les bruitages et la musique synthétisés
 - `scripts/hud.gd` : la couche 2D
 - `scripts/gfx.gd` : niveaux de qualité, brouillard, néons, pluie au sol, post-effets caméra

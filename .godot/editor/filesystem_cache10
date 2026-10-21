@@ -1,7 +1,7 @@
 78098b89c88a74ebe8c20117b8754620
-::res://::1792615354
+::res://::1792618573
 gitignore.txt::TextFile::-1::1792601909::0::1::::<><><>0<>0<><>::
-LISEZMOI.md::TextFile::-1::1792613759::0::1::::<><><>0<>0<><>::
+LISEZMOI.md::TextFile::-1::1792617611::0::1::::<><><>0<>0<><>::
 main.tscn::PackedScene::-1::1792435082::0::1::::<><><>0<>0<><>::res://scripts/main.gd
 ::res://models/::1792613782
 jade.glb::PackedScene::8936153660252408744::1792611609::1792611691::1::::<><><>0<>0<>6267621c1999ed0ba6eb1c9fd2b36fef<>res://.godot/imported/jade.glb-2bac86759163df59a55470c24272dd2a.scn::uid://bim87wierupbu::::res://models/jade_Fingernails_albedo.webp<>uid://csrci6c3s1pbd::::res://models/jade_Torso_albedo.webp<>uid://basynl3i4awnw::::res://models/jade_Pupils_albedo.webp<>uid://c0k8ittk44dc7::::res://models/jade_Face_albedo.webp<>uid://e13rfbq1ryaq::::res://models/jade_Lips_albedo.webp<>uid://sppgvtqjnde8::::res://models/jade_Teeth_albedo.webp<>uid://cgl05hi2gvsip::::res://models/jade_Ears_albedo.webp<>uid://7wsm2c7jhydq::::res://models/jade_Legs_albedo.webp<>uid://jk25jccubfh4::::res://models/jade_Torso_albedo2.webp<>uid://cvbmvrhng5hmg::::res://models/jade_Frame Pins_albedo.webp<>uid://d32nudocmv3cp::::res://models/jade_Back_albedo.webp<>uid://df40rd7tdt1ah::::res://models/jade_Cap_albedo.webp<>uid://dslwpj5wo8pp5::::res://models/jade_InSole_albedo.webp<>uid://d4aely1ocme7f::::res://models/jade_Upper_1_albedo.webp<>uid://cdydnolosdoov::::res://models/jade_Panties_albedo.webp<>uid://bp1882ghwfn15::::res://models/jade_Skirt_albedo.webp<>uid://tjv2eikrprjk::::res://models/jade_Top_albedo.webp
@@ -22,12 +22,14 @@ jade_Top_albedo.webp::CompressedTexture2D::1353490925122198600::1792611689::1792
 jade_Torso_albedo2.webp::CompressedTexture2D::654036778822133671::1792611688::1792611691::1::::<><><>0<>0<>c1973aa209f688cf799d7ee38a239147<>res://.godot/imported/jade_Torso_albedo2.webp-1d449e32db003e63ed35b48b08590b51.s3tc.ctex::
 jade_Torso_albedo.webp::CompressedTexture2D::6071472327637321809::1792611686::1792611691::1::::<><><>0<>0<>4fb8aad2703de6218b744f8c9262fd07<>res://.godot/imported/jade_Torso_albedo.webp-ac6115d875b533d7bce2ac58223c6327.s3tc.ctex::
 jade_Upper_1_albedo.webp::CompressedTexture2D::9195002329650826261::1792611689::1792611691::1::::<><><>0<>0<>f34e6606c6227567755a8f2b8eb815fa<>res://.godot/imported/jade_Upper_1_albedo.webp-49ef464eef63583edbfe9cd5c3389e55.s3tc.ctex::
-::res://scripts/::1792615328
-gfx.gd::GDScript::265792816960884464::1792615318::0::1::::Gfx<>Node<><>0<>0<><>::
+::res://scripts/::1792617629
+city.gd::GDScript::3148162706924504852::1792617603::0::1::::CityBuilder<>RefCounted<><>0<>0<><>::
+gfx.gd::GDScript::265792816960884464::1792617609::0::1::::Gfx<>Node<><>0<>0<><>::
 hud.gd::GDScript::3267460290045559860::1792435085::0::1::::Hud<>Control<><>0<>0<><>::
-main.gd::GDScript::8728336770053759493::1792613752::0::1::::<>Node3D<><>0<>0<><>::
+main.gd::GDScript::8728336770053759493::1792617607::0::1::::<>Node3D<><>0<>0<><>::
 model_rig.gd::GDScript::8406504258196660160::1792613757::0::1::::ModelRig<>Node3D<><>0<>0<><>::
 pose.gd::GDScript::8830965607652299345::1792606483::0::1::::Pose<>RefCounted<><>0<>0<><>::
 rig.gd::GDScript::6449738052907785188::1792613755::0::1::::Rig<>Node3D<><>0<>0<><>::
 sfx.gd::GDScript::7562075513939939883::1792606483::0::1::::Sfx<>Node<><>0<>0<><>::
-stage.gd::GDScript::3942521409042694994::1792615316::0::1::::StageBuilder<>RefCounted<><>0<>0<><>::
+shaders.gd::GDScript::7904256847162427799::1792617604::0::1::::Shaders<>RefCounted<><>0<>0<><>::
+stage.gd::GDScript::3942521409042694994::1792617606::0::1::::StageBuilder<>RefCounted<><>0<>0<><>::

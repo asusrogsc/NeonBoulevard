@@ -2100,8 +2100,10 @@ func _make_rig(lk: Dictionary) -> Node3D:
 func _make_prop(kind: String) -> Node3D:
 	if prop_mats.is_empty():
 		prop_mats = {
-			"metal": StageBuilder.mat("#8a93a6", 0.35, 0.8), "metal_d": StageBuilder.mat("#5a6276", 0.4, 0.8),
-			"wood": StageBuilder.mat("#a8743a", 0.75), "wood_d": StageBuilder.mat("#6a4520", 0.8),
+			"metal": Shaders.mat("corrugated", {"base": Color("#7a8396"), "ribs": 2.2, "tags": 0.0, "metal": 0.8}),
+			"metal_d": Shaders.mat("metal", {"paint": Color("#4a5266"), "chips": 0.5, "metal": 0.8}),
+			"wood": Shaders.mat("wall", {"style": 1, "brick_a": Color("#9a6a34"), "mortar": Color("#5a3a1c"), "wet": 0.3}),
+			"wood_d": Shaders.mat("wall", {"style": 1, "brick_a": Color("#5a3a1a"), "mortar": Color("#3a2410"), "wet": 0.3}),
 			"apple": StageBuilder.mat("#d8262e", 0.28), "stem": StageBuilder.mat("#4a3020", 0.8),
 			"chick": StageBuilder.mat("#c4742c", 0.35), "bone": StageBuilder.mat("#f0ebe0", 0.5),
 			"cash": StageBuilder.mat("#5a8a3a", 0.6), "band": StageBuilder.mat("#e8d24a", 0.4, 0.3),
