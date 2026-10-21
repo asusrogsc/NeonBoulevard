@@ -103,6 +103,18 @@ class Ent:
 	var kicked := false
 	var knee_hit := false
 	var rig = null
+	# --- joueurs (coop)
+	var pid := 0
+	var ai := false
+	var lives := 2
+	var out := false
+	var inp := {}
+	var holder = null
+	var target = null
+	var ai_t := 0.0
+	var ai_hold := {}
+	var spec_cd := 0.0
+	var nograb := 0.0
 
 
 class Prop:
@@ -165,7 +177,6 @@ var items: Array = []
 var fxs: Array = []
 var texts: Array = []
 var score := 0
-var lives := 2
 var hitstop := 0.0
 var shake := 0.0
 var banner = null
@@ -174,7 +185,11 @@ var last_foe = null
 var last_foe_t := 0.0
 var sel := 0
 var mode_t := 0.0
-var P = null
+var P = null  # joueur en cours de mise à jour
+var players: Array = []
+var slots := ["human", "off"]  # par héros (jade, bruno) : human / ai / off
+var humans := 1
+var IN: Array = [{}, {}]
 var I := {}
 var dummies := {}
 var high_quality := true
@@ -257,37 +272,50 @@ func _dummy(hero: String, face: float, ph: float) -> Ent:
 	return e
 
 
-func _add_action(n: String, keys: Array, phys: Array, joys: Array, axis := -1, dir := 0.0) -> void:
+func _add_action(n: String, keys: Array, phys: Array, joys: Array, axis := -1, dir := 0.0, dev := -1) -> void:
+	# dev = -1 : toutes les manettes ; 0 / 1 : manette du joueur 1 / 2
 	if not InputMap.has_action(n):
 		InputMap.add_action(n, 0.35)
 	for k in keys:
 		var ev := InputEventKey.new()
+		ev.device = -1
 		ev.keycode = k
 		InputMap.action_add_event(n, ev)
 	for k in phys:
 		var ev2 := InputEventKey.new()
+		ev2.device = -1
 		ev2.physical_keycode = k
 		InputMap.action_add_event(n, ev2)
 	for b in joys:
 		var jb := InputEventJoypadButton.new()
+		jb.device = dev
 		jb.button_index = b
 		InputMap.action_add_event(n, jb)
 	if axis >= 0:
 		var jm := InputEventJoypadMotion.new()
+		jm.device = dev
 		jm.axis = axis
 		jm.axis_value = dir
 		InputMap.action_add_event(n, jm)
 
 
 func _setup_input() -> void:
-	# ZQSD sur clavier AZERTY = touches physiques WASD
-	_add_action("left", [KEY_LEFT], [KEY_A], [JOY_BUTTON_DPAD_LEFT], JOY_AXIS_LEFT_X, -1.0)
-	_add_action("right", [KEY_RIGHT], [KEY_D], [JOY_BUTTON_DPAD_RIGHT], JOY_AXIS_LEFT_X, 1.0)
-	_add_action("up", [KEY_UP], [KEY_W], [JOY_BUTTON_DPAD_UP], JOY_AXIS_LEFT_Y, -1.0)
-	_add_action("down", [KEY_DOWN], [KEY_S], [JOY_BUTTON_DPAD_DOWN], JOY_AXIS_LEFT_Y, 1.0)
-	_add_action("punch", [], [KEY_J, KEY_X], [JOY_BUTTON_X])
-	_add_action("jump", [], [KEY_K, KEY_C], [JOY_BUTTON_A])
-	_add_action("special", [], [KEY_L, KEY_V], [JOY_BUTTON_Y, JOY_BUTTON_B])
+	# Joueur 1 : ZQSD (touches physiques WASD sur AZERTY) + J/K/L (ou X/C/V), manette 1
+	_add_action("p1_left", [], [KEY_A], [JOY_BUTTON_DPAD_LEFT], JOY_AXIS_LEFT_X, -1.0, 0)
+	_add_action("p1_right", [], [KEY_D], [JOY_BUTTON_DPAD_RIGHT], JOY_AXIS_LEFT_X, 1.0, 0)
+	_add_action("p1_up", [], [KEY_W], [JOY_BUTTON_DPAD_UP], JOY_AXIS_LEFT_Y, -1.0, 0)
+	_add_action("p1_down", [], [KEY_S], [JOY_BUTTON_DPAD_DOWN], JOY_AXIS_LEFT_Y, 1.0, 0)
+	_add_action("p1_punch", [], [KEY_J, KEY_X], [JOY_BUTTON_X], -1, 0.0, 0)
+	_add_action("p1_jump", [], [KEY_K, KEY_C], [JOY_BUTTON_A], -1, 0.0, 0)
+	_add_action("p1_special", [], [KEY_L, KEY_V], [JOY_BUTTON_Y, JOY_BUTTON_B], -1, 0.0, 0)
+	# Joueur 2 : flèches + pavé num. 1/2/3 (ou les 3 touches à droite de M), manette 2
+	_add_action("p2_left", [KEY_LEFT], [], [JOY_BUTTON_DPAD_LEFT], JOY_AXIS_LEFT_X, -1.0, 1)
+	_add_action("p2_right", [KEY_RIGHT], [], [JOY_BUTTON_DPAD_RIGHT], JOY_AXIS_LEFT_X, 1.0, 1)
+	_add_action("p2_up", [KEY_UP], [], [JOY_BUTTON_DPAD_UP], JOY_AXIS_LEFT_Y, -1.0, 1)
+	_add_action("p2_down", [KEY_DOWN], [], [JOY_BUTTON_DPAD_DOWN], JOY_AXIS_LEFT_Y, 1.0, 1)
+	_add_action("p2_punch", [], [KEY_KP_1, KEY_COMMA], [JOY_BUTTON_X], -1, 0.0, 1)
+	_add_action("p2_jump", [], [KEY_KP_2, KEY_PERIOD], [JOY_BUTTON_A], -1, 0.0, 1)
+	_add_action("p2_special", [], [KEY_KP_3, KEY_SLASH], [JOY_BUTTON_Y, JOY_BUTTON_B], -1, 0.0, 1)
 	_add_action("start", [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE], [], [JOY_BUTTON_START])
 	_add_action("pause", [KEY_P, KEY_ESCAPE], [], [JOY_BUTTON_BACK])
 	_add_action("mute", [KEY_M], [], [])
@@ -295,15 +323,24 @@ func _setup_input() -> void:
 	_add_action("quality", [KEY_F2], [], [])
 
 
-func _read_input() -> void:
-	I = {
-		"l": Input.is_action_pressed("left"), "r": Input.is_action_pressed("right"),
-		"u": Input.is_action_pressed("up"), "d": Input.is_action_pressed("down"),
-		"pPunch": Input.is_action_just_pressed("punch"), "pJump": Input.is_action_just_pressed("jump"),
-		"pSpec": Input.is_action_just_pressed("special"), "pStart": Input.is_action_just_pressed("start"),
-		"pL": Input.is_action_just_pressed("left"), "pR": Input.is_action_just_pressed("right"),
-		"pU": Input.is_action_just_pressed("up"), "pD": Input.is_action_just_pressed("down"),
+func _read_pad(pre: String) -> Dictionary:
+	return {
+		"l": Input.is_action_pressed(pre + "left"), "r": Input.is_action_pressed(pre + "right"),
+		"u": Input.is_action_pressed(pre + "up"), "d": Input.is_action_pressed(pre + "down"),
+		"pPunch": Input.is_action_just_pressed(pre + "punch"), "pJump": Input.is_action_just_pressed(pre + "jump"),
+		"pSpec": Input.is_action_just_pressed(pre + "special"),
+		"pL": Input.is_action_just_pressed(pre + "left"), "pR": Input.is_action_just_pressed(pre + "right"),
+		"pU": Input.is_action_just_pressed(pre + "up"), "pD": Input.is_action_just_pressed(pre + "down"),
 	}
+
+
+func _read_input() -> void:
+	IN = [_read_pad("p1_"), _read_pad("p2_")]
+	# I = les deux jeux de commandes réunis (menus, et joueur seul)
+	I = {}
+	for k in IN[0]:
+		I[k] = IN[0][k] or IN[1][k]
+	I["pStart"] = Input.is_action_just_pressed("start")
 
 
 func _process(delta: float) -> void:
@@ -380,6 +417,17 @@ func _new_player(hero: String) -> Ent:
 	return e
 
 
+func _alive_players() -> Array:
+	return players.filter(func(p): return not p.out)
+
+
+func _free_players() -> void:
+	for p in players:
+		_free_rig(p)
+	players = []
+	P = null
+
+
 func _free_rig(e) -> void:
 	if e and e.rig:
 		e.rig.queue_free()
@@ -416,14 +464,19 @@ func _start_stage(i: int) -> void:
 		pr.node.rotation.y = randf() * 0.6
 		dyn.add_child(pr.node)
 		props.append(pr)
-	P.x = 50.0
-	P.y = 180.0
-	P.z = 0.0
-	P.st = "idle"
-	P.t = 0.0
-	P.held = null
-	P.inv = 1.5
-	P.face = 1.0
+	for k in players.size():
+		var pl = players[k]
+		pl.x = 50.0 - k * 14.0
+		pl.y = 172.0 + k * 18.0
+		pl.z = 0.0
+		pl.vx = 0.0
+		pl.vz = 0.0
+		pl.st = "idle"
+		pl.t = 0.0
+		pl.held = null
+		pl.inv = 1.5
+		pl.face = 1.0
+		pl.ai_t = 0.0
 	banner = {"t": 0.0, "dur": 2.6, "a": "STAGE %d" % (i + 1), "b": S.name, "warn": false}
 	mode = "play"
 	sfx.set_music(true)
@@ -582,7 +635,7 @@ func _hit_enemy(e, d: float, ko: bool, dir: float) -> void:
 		_shake(2.0)
 	if e.st == "held":
 		if e.hp <= 0 or ko:
-			_release()
+			_release_of(e.holder)
 			_knockdown(e, dir, e.hp <= 0)
 		return
 	if e.hp <= 0:
@@ -624,48 +677,54 @@ func _knockdown(e, dir: float, dead: bool) -> void:
 
 
 func _release() -> void:
-	if P.held:
-		var e = P.held
+	_release_of(P)
+
+
+func _release_of(p) -> void:
+	if p and p.held:
+		var e = p.held
 		if e.st == "held":
 			e.st = "idle"
 			e.t = 0.0
 			e.cd = 0.6
-		P.held = null
+		e.holder = null
+		e.nograb = 0.8
+		p.held = null
 
 
-func _hit_player(d: float, ko: bool, src) -> bool:
-	if P.inv > 0 or P.st in ["fall", "lying", "getup", "dead", "spec", "throw"]:
+func _hit_player(p, d: float, ko: bool, src) -> bool:
+	if p.inv > 0 or p.st in ["fall", "lying", "getup", "dead", "spec", "throw"]:
 		return false
-	if P.st == "grab" or P.st == "knee":
-		_release()
-	P.hp -= d
-	P.flash = 0.1
+	if p.st == "grab" or p.st == "knee":
+		_release_of(p)
+	p.hp -= d
+	p.flash = 0.1
 	_sfx("hurt")
 	_shake(3.0 if d >= 12 else 2.0)
 	_hitstop(0.06)
-	_spark(P.x, P.y, P.z + 30.0, d >= 12)
-	var dir: float = signf(P.x - src.x) if P.x != src.x else 1.0
-	if P.hp <= 0:
-		P.hp = 0.0
-		P.st = "fall"
-		P.t = 0.0
-		P.vz = 150.0
-		P.vx = dir * 80.0
-		P.z = maxf(P.z, 1.0)
-		P.dead = true
+	_spark(p.x, p.y, p.z + 30.0, d >= 12)
+	var dir: float = signf(p.x - src.x) if p.x != src.x else 1.0
+	if p.hp <= 0:
+		p.hp = 0.0
+		p.st = "fall"
+		p.t = 0.0
+		p.vz = 150.0
+		p.vx = dir * 80.0
+		p.z = maxf(p.z, 1.0)
+		p.dead = true
 		_sfx("ko")
 		return true
-	if ko or d >= 12 or P.z > 0:
-		P.st = "fall"
-		P.t = 0.0
-		P.vz = 140.0
-		P.vx = dir * 80.0
-		P.z = maxf(P.z, 1.0)
-		P.dead = false
+	if ko or d >= 12 or p.z > 0:
+		p.st = "fall"
+		p.t = 0.0
+		p.vz = 140.0
+		p.vx = dir * 80.0
+		p.z = maxf(p.z, 1.0)
+		p.dead = false
 	else:
-		P.st = "hurt"
-		P.t = 0.0
-		P.vx = dir * 40.0
+		p.st = "hurt"
+		p.t = 0.0
+		p.vx = dir * 40.0
 	return true
 
 
@@ -691,34 +750,35 @@ func _start_combo() -> void:
 
 func _upd_player(dt: float) -> void:
 	var h: Dictionary = P.h
+	var In: Dictionary = P.inp
 	P.t += dt
 	if P.inv > 0:
 		P.inv -= dt
 	if P.flash > 0:
 		P.flash -= dt
 	P.combo_t += dt
-	var ix := (1 if I.r else 0) - (1 if I.l else 0)
-	var iy := (1 if I.d else 0) - (1 if I.u else 0)
+	var ix := (1 if In.r else 0) - (1 if In.l else 0)
+	var iy := (1 if In.d else 0) - (1 if In.u else 0)
 	var spd: float = h.spd
 	P.moving = false
 	match P.st:
 		"idle", "walk", "land":
 			if P.st == "land" and P.t < 0.07:
 				pass
-			elif I.pSpec and P.hp > 8:
+			elif In.pSpec and P.hp > 8:
 				_set_p("spec")
 				P.hp -= 6.0
 				P.hit_set = {}
 				P.inv = 0.5
 				_sfx("swing")
-			elif I.pJump:
+			elif In.pJump:
 				_set_p("jump")
 				P.vz = 215.0
 				P.vx = ix * spd * 1.1
 				P.vy = iy * spd * 0.45
 				P.kicked = false
 				_sfx("jump")
-			elif I.pPunch:
+			elif In.pPunch:
 				_start_combo()
 			elif ix != 0 or iy != 0:
 				if ix != 0:
@@ -730,12 +790,13 @@ func _upd_player(dt: float) -> void:
 				P.wph += dt * 11.0
 				if ix != 0 and float(ix) == P.face:
 					for e in enemies:
-						if e.T.get("boss", false) or not (e.st in ["idle", "walk", "wait"]) or e.z > 0:
+						if e.T.get("boss", false) or not (e.st in ["idle", "walk", "wait"]) or e.z > 0 or e.nograb > 0:
 							continue
 						var rel: float = (e.x - P.x) * P.face
 						if rel > 4.0 and rel < 15.0 and absf(e.y - P.y) < 5.0:
 							_set_p("grab")
 							P.held = e
+							e.holder = P
 							e.st = "held"
 							e.t = 0.0
 							e.face = -P.face
@@ -748,7 +809,7 @@ func _upd_player(dt: float) -> void:
 			var s: float = A.s
 			var a: float = A.a
 			var r: float = A.r
-			if I.pPunch and P.t > s:
+			if In.pPunch and P.t > s:
 				P.buffer = true
 			if P.t >= s and P.t < s + a:
 				if A.has("step"):
@@ -765,7 +826,7 @@ func _upd_player(dt: float) -> void:
 			P.y += P.vy * dt
 			P.z += P.vz * dt
 			P.vz -= GRAV * dt
-			if P.st == "jump" and I.pPunch and not P.kicked:
+			if P.st == "jump" and In.pPunch and not P.kicked:
 				P.st = "jkick"
 				P.kicked = true
 				P.hit_set = {}
@@ -792,7 +853,7 @@ func _upd_player(dt: float) -> void:
 				e.x = P.x + P.face * 13.0
 				e.y = P.y
 				e.face = -P.face
-				if I.pPunch:
+				if In.pPunch:
 					if ix != 0 and float(ix) == -P.face:
 						_set_p("throw")
 						P.face = -P.face
@@ -801,7 +862,7 @@ func _upd_player(dt: float) -> void:
 					else:
 						_set_p("knee")
 						P.knee_hit = false
-				elif I.pJump:
+				elif In.pJump:
 					_release()
 					_set_p("jump")
 					P.vz = 215.0
@@ -845,6 +906,7 @@ func _upd_player(dt: float) -> void:
 				last_foe_t = 3.0
 				score += int(h.thr) * 10
 				e3.thrown_hits = {}
+				e3.holder = null
 				P.held = null
 				_sfx("heavy")
 				_shake(2.0)
@@ -873,13 +935,13 @@ func _upd_player(dt: float) -> void:
 				_set_p("idle")
 				P.inv = 1.1
 		"dead":
-			if P.t > 1.3:
-				if lives <= 0:
-					mode = "over"
-					mode_t = 0.0
-					sfx.set_music(false)
+			if P.t > 1.3 and not P.out:
+				if P.lives <= 0:
+					P.out = true
+					_free_rig(P)
+					_pop(P.x, P.y, 60.0, P.h.name + " HORS JEU", Color("#ff4f8b"))
 				else:
-					lives -= 1
+					P.lives -= 1
 					P.hp = P.maxhp
 					_set_p("fall")
 					P.inv = 2.6
@@ -914,24 +976,199 @@ func _upd_player(dt: float) -> void:
 	items = items.filter(func(i): return not i.taken)
 
 
+# ------------------------------------------------------------------ IA PARTENAIRE
+## Produit les mêmes entrées qu'une manette. L'IA "réfléchit" toutes les 60 à 120 ms,
+## ce qui lui donne un petit temps de réaction et la rend battable/humaine.
+func _ai_think(p, dt: float) -> Dictionary:
+	var out := {"l": false, "r": false, "u": false, "d": false, "pPunch": false, "pJump": false, "pSpec": false}
+	p.spec_cd -= dt
+	p.ai_t -= dt
+	if p.ai_t > 0.0:
+		for k in ["l", "r", "u", "d"]:
+			out[k] = p.ai_hold.get(k, false)
+		return out
+	p.ai_t = _rnd(0.06, 0.12)
+	var reach: float = float(p.h.atk[0].reach)
+	var gx: float = p.x
+	var gy: float = p.y
+	var go := false
+	var turn := 0.0
+	var foes: Array = enemies.filter(func(e): return not e.dead and e.st != "enter")
+	var mate = null
+	for o in players:
+		if o != p and not o.out:
+			mate = o
+	# 1) Danger : charge ou piétinement du boss
+	var danger := false
+	for e in foes:
+		if not e.T.get("boss", false):
+			continue
+		if e.st in ["bwind", "charge"] and absf(e.y - p.y) < 14.0:
+			danger = true
+			go = true
+			gx = p.x
+			gy = e.y - 20.0 if (p.y < e.y and e.y - 20.0 >= TOP) or e.y + 20.0 > BOT else e.y + 20.0
+		if e.st == "stomp" and e.t > 0.2 and e.t < 0.42 and absf(e.x - p.x) < 100.0 and p.st in ["idle", "walk"]:
+			out.pJump = true
+	# 2) Chope : genoux, parfois projection
+	if p.st == "grab" and p.held:
+		out.pPunch = true
+		if randf() < 0.3:
+			out["l" if p.face > 0 else "r"] = true
+		p.ai_hold = {}
+		return out
+	# 3) En l'air : coup de pied sauté si un ennemi est devant
+	if p.st == "jump":
+		for e in foes:
+			if absf(e.x - p.x) < 34.0 and absf(e.y - p.y) < 8.0 and (e.x - p.x) * p.face > 0.0:
+				out.pPunch = true
+		return out
+	# 4) Nourriture si la vie est basse (on laisse la priorité au partenaire s'il est plus blessé)
+	var r: float = p.hp / p.maxhp
+	var food = null
+	if r < 0.55 and (mate == null or mate.hp / mate.maxhp >= r - 0.05):
+		var fd := INF
+		for it in items:
+			if it.taken or it.kind == "cash" or it.z > 0:
+				continue
+			var d: float = absf(it.x - p.x) + absf(it.y - p.y)
+			if d < fd:
+				fd = d
+				food = it
+	if danger:
+		pass
+	elif food:
+		gx = food.x
+		gy = food.y
+		go = true
+	elif not foes.is_empty():
+		# 5) Choix de la cible : la plus proche qui peut être frappée
+		var t = null
+		var td := INF
+		for e in foes:
+			if e.st in ["lying", "getup", "fall", "thrown"]:
+				continue
+			var d2: float = absf(e.x - p.x) + absf(e.y - p.y) * 2.0
+			if d2 < td:
+				td = d2
+				t = e
+		var down := false
+		if t == null:
+			t = foes[0]
+			down = true
+		var side: float = signf(p.x - t.x) if p.x != t.x else -1.0
+		# si le partenaire frappe déjà de ce côté, on prend l'ennemi à revers
+		if mate and absf(mate.x - t.x) < 34.0 and signf(mate.x - t.x) == side and absf(mate.y - t.y) < 12.0:
+			var nx: float = t.x - side * (reach - 6.0)
+			if nx > cam_x + 18.0 and nx < cam_x + W - 18.0:
+				side = -side
+		gx = t.x + side * (40.0 if down else reach - 7.0)
+		gy = t.y
+		go = true
+		if not down:
+			var rel: float = (t.x - p.x) * p.face
+			var dy: float = absf(t.y - p.y)
+			if dy < 6.0 and rel > 0.0 and rel < reach + 2.0:
+				if randf() < 0.85:
+					out.pPunch = true
+			elif dy < 6.0 and rel <= 0.0 and absf(t.x - p.x) < reach + 2.0:
+				turn = signf(t.x - p.x)
+			elif dy < 5.0 and rel > 26.0 and rel < 44.0 and randf() < 0.08:
+				out.pJump = true
+				turn = p.face
+		var close := foes.filter(func(e): return absf(e.x - p.x) < 28.0 and absf(e.y - p.y) < 9.0 and _vuln(e)).size()
+		if close >= 2 and p.hp > 30.0 and p.spec_cd <= 0.0 and p.st in ["idle", "walk"]:
+			out.pSpec = true
+			p.spec_cd = _rnd(3.5, 6.0)
+	else:
+		# 6) Pas d'ennemi : casser une caisse proche, sinon suivre le partenaire (ou avancer)
+		var pr = null
+		for q in props:
+			if not q.broken and absf(q.x - p.x) < 90.0 and q.x > cam_x + 10.0 and q.x < cam_x + W - 10.0:
+				pr = q
+		if pr:
+			var sd: float = signf(p.x - pr.x) if p.x != pr.x else -1.0
+			gx = pr.x + sd * 16.0
+			gy = pr.y
+			go = true
+			var rl: float = (pr.x - p.x) * p.face
+			if absf(pr.y - p.y) < 8.0 and rl > 0.0 and rl < reach + 4.0:
+				out.pPunch = true
+			elif absf(pr.y - p.y) < 8.0 and absf(pr.x - p.x) < 20.0:
+				turn = signf(pr.x - p.x)
+		elif mate and not mate.ai:
+			gx = mate.x - 30.0
+			gy = mate.y + (14.0 if mate.y < 178.0 else -14.0)
+			go = absf(gx - p.x) > 14.0 or absf(gy - p.y) > 6.0
+		else:
+			gx = p.x + 60.0
+			gy = 178.0
+			go = true
+	gx = clampf(gx, cam_x + 18.0, cam_x + W - 18.0)
+	gy = clampf(gy, TOP, BOT)
+	var hold := {"l": false, "r": false, "u": false, "d": false}
+	if go:
+		if gx > p.x + 3.0:
+			hold.r = true
+		elif gx < p.x - 3.0:
+			hold.l = true
+		if gy > p.y + 2.0:
+			hold.d = true
+		elif gy < p.y - 2.0:
+			hold.u = true
+	if turn != 0.0:
+		hold.r = turn > 0.0
+		hold.l = turn < 0.0
+	p.ai_hold = hold
+	for k in hold:
+		out[k] = out[k] or hold[k]
+	return out
+
+
 # ------------------------------------------------------------------ ENNEMIS
 func _upd_enemies(dt: float) -> void:
-	var pv: bool = not (P.st in ["fall", "lying", "getup", "dead"]) and P.inv <= 0
-	var active := enemies.filter(func(e): return e.st in ["idle", "walk", "eatk", "hurt", "wait"])
-	active.sort_custom(func(a, b): return absf(a.x - P.x) < absf(b.x - P.x))
-	var eng := 0
-	var slot := 0
-	for e in active:
-		if e.T.get("boss", false) or eng < 2:
-			e.engaged = true
-			eng += 1
-		else:
-			e.engaged = false
-			e.slot = slot
-			slot += 1
+	var alive := _alive_players()
+	if alive.is_empty():
+		return
+	# Cible de chaque ennemi : le joueur le plus proche (on garde l'ancienne cible si elle reste proche)
+	var pv_of := {}
+	for pl in alive:
+		pv_of[pl] = not (pl.st in ["fall", "lying", "getup", "dead"]) and pl.inv <= 0
 	for e in enemies:
+		var best = null
+		var bd := INF
+		for pl in alive:
+			var d: float = absf(pl.x - e.x) + absf(pl.y - e.y) * 2.0 + (0.0 if pv_of[pl] else 80.0)
+			if d < bd:
+				bd = d
+				best = pl
+		if e.target == null or e.target.out or not (e.target in alive):
+			e.target = best
+		else:
+			var cur: float = absf(e.target.x - e.x) + absf(e.target.y - e.y) * 2.0 + (0.0 if pv_of[e.target] else 80.0)
+			if cur > bd + 40.0:
+				e.target = best
+	# Au plus 2 ennemis "engagés" par joueur, les autres tournent autour
+	for pl in alive:
+		var active := enemies.filter(func(e): return e.target == pl and e.st in ["idle", "walk", "eatk", "hurt", "wait"])
+		active.sort_custom(func(a, b): return absf(a.x - pl.x) < absf(b.x - pl.x))
+		var eng := 0
+		var slot := 0
+		for e in active:
+			if e.T.get("boss", false) or eng < 2:
+				e.engaged = true
+				eng += 1
+			else:
+				e.engaged = false
+				e.slot = slot
+				slot += 1
+	for e in enemies:
+		var tg = e.target
+		var pv: bool = pv_of.get(tg, false)
 		e.t += dt
 		e.cd -= dt
+		if e.nograb > 0:
+			e.nograb -= dt
 		if e.flash > 0:
 			e.flash -= dt
 		e.moving = false
@@ -951,16 +1188,16 @@ func _upd_enemies(dt: float) -> void:
 				if absf(dx) < 4.0:
 					e.st = "idle"
 			"idle", "walk", "wait":
-				e.face = 1.0 if P.x > e.x else -1.0
-				var side := -1.0 if e.x < P.x else 1.0
+				e.face = 1.0 if tg.x > e.x else -1.0
+				var side := -1.0 if e.x < tg.x else 1.0
 				var tx2: float
 				var ty2: float
 				if e.engaged and pv:
-					tx2 = P.x + side * (float(TA.reach) - 5.0)
-					ty2 = P.y
+					tx2 = tg.x + side * (float(TA.reach) - 5.0)
+					ty2 = tg.y
 				else:
-					tx2 = P.x + side * (64.0 + (e.slot % 3) * 16.0)
-					ty2 = clampf(P.y + (-14.0 if e.slot % 2 == 1 else 14.0), TOP, BOT)
+					tx2 = tg.x + side * (64.0 + (e.slot % 3) * 16.0)
+					ty2 = clampf(tg.y + (-14.0 if e.slot % 2 == 1 else 14.0), TOP, BOT)
 				tx2 = clampf(tx2, cam_x + 10.0, cam_x + W - 10.0)
 				var dx2: float = tx2 - e.x
 				var dy2: float = ty2 - e.y
@@ -973,8 +1210,8 @@ func _upd_enemies(dt: float) -> void:
 					e.moving = true
 				if e.moving:
 					e.wph += dt * (7.0 if boss else 9.0)
-				var adx: float = absf(P.x - e.x)
-				var ady: float = absf(P.y - e.y)
+				var adx: float = absf(tg.x - e.x)
+				var ady: float = absf(tg.y - e.y)
 				if boss:
 					e.sp_t -= dt
 					if not e.summoned and e.hp < e.maxhp * 0.5:
@@ -997,7 +1234,7 @@ func _upd_enemies(dt: float) -> void:
 							_sfx("warn")
 							continue
 				var rng: float = TA.get("range", TA.reach)
-				if e.engaged and pv and e.cd <= 0 and adx < rng and ady < 5.0 and P.z < 30:
+				if e.engaged and pv and e.cd <= 0 and adx < rng and ady < 5.0 and tg.z < 30:
 					e.st = "eatk"
 					e.t = 0.0
 					e.atk = TA
@@ -1010,16 +1247,17 @@ func _upd_enemies(dt: float) -> void:
 				if A.has("dash") and e.t >= s and e.t < s + a:
 					e.x += e.face * float(A.dash) * dt
 				if e.t >= s and e.t < s + a and not e.hit_done:
-					var rel: float = (P.x - e.x) * e.face
-					if rel > -4.0 and rel < float(A.reach) and absf(P.y - e.y) < 8.0 and P.z < 14:
-						if _hit_player(float(A.d), A.get("ko", false), e):
-							e.hit_done = true
+					for pl in alive:
+						var rel: float = (pl.x - e.x) * e.face
+						if rel > -4.0 and rel < float(A.reach) and absf(pl.y - e.y) < 8.0 and pl.z < 14:
+							if _hit_player(pl, float(A.d), A.get("ko", false), e):
+								e.hit_done = true
 				if e.t >= s + a + r:
 					e.st = "idle"
 					e.t = 0.0
 					e.cd = _rnd(T.cd[0], T.cd[1])
 			"bwind":
-				e.face = 1.0 if P.x > e.x else -1.0
+				e.face = 1.0 if tg.x > e.x else -1.0
 				if e.t > 0.65:
 					e.st = "charge"
 					e.t = 0.0
@@ -1030,10 +1268,11 @@ func _upd_enemies(dt: float) -> void:
 				e.x += e.ch_dir * 190.0 * dt
 				e.moving = true
 				e.wph += dt * 16.0
-				var rel2: float = (P.x - e.x) * e.face
-				if not e.hit_done and rel2 > -6.0 and rel2 < 30.0 and absf(P.y - e.y) < 10.0 and P.z < 16:
-					if _hit_player(16.0, true, e):
-						e.hit_done = true
+				for pl in alive:
+					var rel2: float = (pl.x - e.x) * e.face
+					if not e.hit_done and rel2 > -6.0 and rel2 < 30.0 and absf(pl.y - e.y) < 10.0 and pl.z < 16:
+						if _hit_player(pl, 16.0, true, e):
+							e.hit_done = true
 				if e.t > 1.5 or e.x < cam_x + 14.0 or e.x > cam_x + W - 14.0:
 					e.x = clampf(e.x, cam_x + 14.0, cam_x + W - 14.0)
 					e.st = "brec"
@@ -1060,8 +1299,9 @@ func _upd_enemies(dt: float) -> void:
 					f.life = 0.5
 					fxs.append(f)
 					_dust(e.x, e.y)
-					if absf(P.x - e.x) < 95.0 and absf(P.y - e.y) < 24.0 and P.z < 4:
-						_hit_player(11.0, true, e)
+					for pl in alive:
+						if absf(pl.x - e.x) < 95.0 and absf(pl.y - e.y) < 24.0 and pl.z < 4:
+							_hit_player(pl, 11.0, true, e)
 				if e.t > 1.1:
 					e.st = "idle"
 					e.t = 0.0
@@ -1135,7 +1375,10 @@ func _upd_zones(dt: float) -> void:
 	var z = zones[zi] if zi < zones.size() else null
 	var max_cam: float = (float(z.lock) if z else float(S.len)) - W
 	if not zone_on:
-		var want: float = P.x - W * 0.42
+		var xs: Array = _alive_players().map(func(p): return p.x)
+		if xs.is_empty():
+			return
+		var want: float = minf(xs.max() - W * 0.42, xs.min() - 20.0)
 		if want > cam_x:
 			cam_x = minf(max_cam, cam_x + minf(want - cam_x, 160.0 * dt))
 		if z and cam_x >= max_cam - 0.5:
@@ -1178,11 +1421,68 @@ func _queue_wave(z: Dictionary, i: int) -> void:
 func _stage_clear() -> void:
 	mode = "clear"
 	mode_t = 0.0
-	P.st = "win"
-	P.t = 0.0
+	for pl in _alive_players():
+		_release_of(pl)
+		pl.st = "win"
+		pl.t = 0.0
 	sfx.set_music(false)
 	_sfx("pick")
-	score += int(P.hp) * 50
+	score += _hp_bonus()
+
+
+func _hp_bonus() -> int:
+	var b := 0
+	for pl in _alive_players():
+		b += int(pl.hp) * 50
+	return b
+
+
+func _roles() -> Array:
+	# Rôle affiché pour chaque héros : J1 / J2 / IA / OFF
+	var out := []
+	var hn := 0
+	for i in 2:
+		match slots[i]:
+			"human":
+				hn += 1
+				out.append("J%d" % hn)
+			"ai":
+				out.append("IA")
+			_:
+				out.append("OFF")
+	return out
+
+
+func _begin_game() -> void:
+	_free_players()
+	var keys := ["jade", "bruno"]
+	humans = 0
+	for i in 2:
+		if slots[i] == "off":
+			continue
+		var pl := _new_player(keys[i])
+		pl.ai = slots[i] == "ai"
+		if not pl.ai:
+			pl.pid = humans
+			humans += 1
+		players.append(pl)
+	P = players[0]
+	score = 0
+	_start_stage(0)
+	_sfx("go")
+
+
+func _check_game_over() -> void:
+	# Fin de partie quand tous les humains sont hors jeu (ou tout le monde en démo IA)
+	var pool: Array = players.filter(func(p): return not p.ai)
+	if pool.is_empty():
+		pool = players
+	for pl in pool:
+		if not pl.out:
+			return
+	mode = "over"
+	mode_t = 0.0
+	sfx.set_music(false)
 
 
 func _toggle_pause() -> void:
@@ -1204,23 +1504,29 @@ func _update(dt: float) -> void:
 				_sfx("sel")
 			return
 		"select":
-			if I.pL or I.pR or I.pU or I.pD:
+			if I.pL or I.pR:
+				# un seul héros actif : il suit le curseur (comme l'ancien écran de choix)
+				var carry: bool = slots.count("off") == 1 and slots[sel] != "off"
 				sel = 1 - sel
+				if carry:
+					slots[sel] = slots[1 - sel]
+					slots[1 - sel] = "off"
 				_sfx("sel")
-			if I.pStart or I.pPunch:
-				_free_rig(P)
-				P = _new_player("bruno" if sel == 1 else "jade")
-				score = 0
-				lives = 2
-				_start_stage(0)
-				_sfx("go")
+			if I.pU or I.pD:
+				var opts := ["human", "ai", "off"]
+				var k := opts.find(slots[sel])
+				k = (k + (1 if I.pD else -1) + opts.size()) % opts.size()
+				slots[sel] = opts[k]
+				_sfx("sel")
+			if (I.pStart or I.pPunch) and slots.count("off") < 2:
+				_begin_game()
 			return
 		"over", "win":
 			mode_t += dt
 			_upd_fx(dt)
 			if mode_t > 1.2 and (I.pStart or I.pPunch):
 				mode = "title"
-				_free_rig(P)
+				_free_players()
 				for e in enemies:
 					_free_rig(e)
 				enemies = []
@@ -1240,11 +1546,13 @@ func _update(dt: float) -> void:
 			return
 		"clear":
 			mode_t += dt
-			P.t += dt
+			for pl in players:
+				pl.t += dt
 			_upd_fx(dt)
 			if mode_t > 3.2:
 				if stage_i + 1 < STAGES.size():
-					P.st = "idle"
+					for pl in players:
+						pl.st = "idle"
 					_start_stage(stage_i + 1)
 				else:
 					mode = "win"
@@ -1262,7 +1570,20 @@ func _update(dt: float) -> void:
 		hitstop -= dt
 		_upd_fx(dt)
 		return
-	_upd_player(dt)
+	for pl in players:
+		if pl.out:
+			continue
+		P = pl
+		if pl.ai:
+			pl.inp = _ai_think(pl, dt)
+		elif humans <= 1:
+			pl.inp = I
+		else:
+			pl.inp = IN[pl.pid]
+		_upd_player(dt)
+	_check_game_over()
+	if mode != "play":
+		return
 	_upd_enemies(dt)
 	_upd_zones(dt)
 	for it in items:
@@ -1527,8 +1848,8 @@ func _render(dt: float) -> void:
 			bd.x = (cx + 4.1) / S3
 			jd.y = 178.0
 			bd.y = 178.0
-			jd.st = "show" if sel == 0 else "idle"
-			bd.st = "show" if sel == 1 else "idle"
+			jd.st = "show" if sel == 0 and slots[0] != "off" else "idle"
+			bd.st = "show" if sel == 1 and slots[1] != "off" else "idle"
 			cam_y = 3.6
 			cam_z = 16.0
 			look_y = 2.7
@@ -1539,16 +1860,23 @@ func _render(dt: float) -> void:
 		_show_stage(stage_i)
 		cx = (cam_x + W / 2.0) * S3
 		var pdt := 0.0 if mode == "pause" else dt
-		if mode == "win":
-			cx = P.x * S3
+		if mode == "win" and not _alive_players().is_empty():
+			var ap := _alive_players()
+			var mx := 0.0
+			var my := 0.0
+			for pl in ap:
+				mx += pl.x
+				my += pl.y
+			cx = mx / ap.size() * S3
 			cam_y = 5.0
-			cam_z = 18.0
+			cam_z = 18.0 + (4.0 if ap.size() > 1 else 0.0)
 			look_y = 3.0
-			look_z = (P.y - 178.0) * S3
+			look_z = (my / ap.size() - 178.0) * S3
 		for e in enemies:
 			_sync_fighter(e, pdt)
-		if P:
-			_sync_fighter(P, pdt)
+		for pl in players:
+			if not pl.out:
+				_sync_fighter(pl, pdt)
 		_sync_dyn()
 	for k in dummies:
 		if dummies[k].rig:
@@ -1599,11 +1927,26 @@ func draw_hud(c: Control) -> void:
 		_txt(c, "UNE NUIT, DEUX POINGS, UNE VILLE", W / 2.0, 110, Color("#e9e4f5"), 1, 6)
 		if int(time * 2.0) % 2 == 0:
 			_txt(c, "APPUIE SUR ENTRÉE", W / 2.0, 130, Color("#ffd23f"), 1, 9, true)
-		_txt(c, "Flèches/ZQSD : bouger   J/X : coup   K/C : saut   L/V : spécial   P : pause   M : son   F11 : plein écran", W / 2.0, 210, Color(0.8, 0.78, 0.9, 0.8), 1, 4.2)
+		_txt(c, "J1 : ZQSD + J/K/L (coup/saut/spécial)   ·   J2 : flèches + pavé 1/2/3   ·   P : pause   M : son   F11 : plein écran", W / 2.0, 210, Color(0.8, 0.78, 0.9, 0.8), 1, 4.2)
 		return
 	if mode == "select":
 		_rect(c, 0, 0, W, H, Color(0.03, 0.02, 0.08, 0.3))
-		_txt(c, "CHOISIS TON COMBATTANT", W / 2.0, 22, Color.WHITE, 1, 11, true)
+		_txt(c, "CHOISIS TES COMBATTANTS", W / 2.0, 17, Color.WHITE, 1, 11, true)
+		var roles := _roles()
+		var nh := roles.count("J1") + roles.count("J2")
+		var na := roles.count("IA")
+		var mode_txt := "SOLO"
+		if nh == 2:
+			mode_txt = "COOP  ·  J1 : ZQSD + J K L   /   J2 : FLÈCHES + PAVÉ 1 2 3"
+		elif nh == 1 and na == 1:
+			mode_txt = "JOUEUR + PARTENAIRE IA"
+		elif na == 2:
+			mode_txt = "DÉMO : IA + IA"
+		elif na == 1:
+			mode_txt = "DÉMO : IA SEULE"
+		elif nh == 0:
+			mode_txt = "CHOISIS AU MOINS UN COMBATTANT"
+		_txt(c, mode_txt, W / 2.0, 27, Color("#ffd23f"), 1, 4.6, true)
 		var keys := ["jade", "bruno"]
 		for i in 2:
 			var h: Dictionary = HEROES[keys[i]]
@@ -1617,6 +1960,13 @@ func draw_hud(c: Control) -> void:
 			_rect(c, x + 62 - lw, 32, lw, 176, bc)
 			if on:
 				_rect(c, x - 62, 32, 124, 176, Color(1, 0.31, 0.55, 0.07))
+			if slots[i] == "off":
+				_rect(c, x - 62, 32, 124, 176, Color(0.03, 0.02, 0.08, 0.5))
+			var rl: String = roles[i]
+			var lab: String = {"J1": "JOUEUR 1", "J2": "JOUEUR 2", "IA": "IA", "OFF": "ABSENT"}[rl]
+			var chip: Color = {"J1": Color("#3fe0d0"), "J2": Color("#ff8fb5"), "IA": Color("#ffd23f"), "OFF": Color(1, 1, 1, 0.4)}[rl]
+			_rect(c, x - 34, 36, 68, 11, Color(0.03, 0.02, 0.08, 0.8))
+			_txt(c, ("▲  " + lab + "  ▼") if on else lab, x, 44.5, chip, 1, 6, true)
 			_rect(c, x - 62, 166, 124, 42, Color(0.03, 0.02, 0.08, 0.75))
 			_txt(c, h.name, x, 179, Color("#ffd23f") if on else Color("#e9e4f5"), 1, 11, true)
 			_txt(c, h.blurb, x, 187, Color("#c9c2e0"), 1, 5)
@@ -1626,20 +1976,36 @@ func draw_hud(c: Control) -> void:
 				for n in 5:
 					_rect(c, x + 4 + n * 10, 192 + j * 5.5, 8, 3.2, Color("#3fe0d0") if n < int(h.stat[j]) else Color("#2c2645"))
 		if int(time * 2.0) % 2 == 0:
-			_txt(c, "← → POUR CHOISIR  ·  ENTRÉE / COUP POUR VALIDER", W / 2.0, 214, Color("#ffd23f"), 1, 5)
+			_txt(c, "← → : HÉROS   ·   ↑ ↓ : JOUEUR / IA / ABSENT   ·   ENTRÉE : JOUER", W / 2.0, 214, Color("#ffd23f"), 1, 5)
 		return
-	if P == null:
+	if players.is_empty():
 		return
 	_rect(c, 0, 0, W, 30, Color(0.03, 0.02, 0.06, 0.55))
-	_txt(c, P.h.name, 8, 13, Color("#3fe0d0"), 0, 9, true)
-	_bar(c, 8, 16, 110, 6, P.hp / P.maxhp, Color("#ffd23f") if P.hp / P.maxhp > 0.3 else Color("#ff4f8b"))
-	_txt(c, "×%d" % lives, 124, 22.5, Color.WHITE, 0, 7, true)
+	var duo := players.size() > 1
+	for i in players.size():
+		var pl = players[i]
+		var bx := 8.0 + i * 128.0
+		var tag := ""
+		if pl.ai:
+			tag = "  IA"
+		elif humans > 1:
+			tag = "  J%d" % (pl.pid + 1)
+		var bw := 100.0 if duo else 110.0
+		_txt(c, pl.h.name + tag, bx, 13, Color("#3fe0d0") if i == 0 else Color("#ff8fb5"), 0, 8 if duo else 9, true)
+		if pl.out:
+			_txt(c, "HORS JEU", bx, 23, Color("#9a92b5"), 0, 6, true)
+		else:
+			var rr: float = pl.hp / pl.maxhp
+			_bar(c, bx, 16, bw, 6, rr, Color("#ffd23f") if rr > 0.3 else Color("#ff4f8b"))
+			_txt(c, "×%d" % pl.lives, bx + bw + 5, 22.5, Color.WHITE, 0, 7, true)
 	_txt(c, "%07d" % score, W - 8, 13, Color.WHITE, 2, 9, true)
 	_txt(c, "STAGE %d" % (stage_i + 1), W - 8, 24, Color("#9a92b5"), 2, 5)
 	var f = last_foe
 	if f and last_foe_t > 0 and not f.T.get("boss", false) and not (f.st == "dead" and f.t > 1.0):
-		_txt(c, f.ename, 170, 13, Color("#ff8fb5"), 0, 7, true)
-		_bar(c, 170, 16, 80, 5, f.hp / f.maxhp, Color("#ff4f8b"))
+		var fx := 8.0 if duo else 170.0
+		var fy := 40.0 if duo else 13.0
+		_txt(c, f.ename, fx, fy, Color("#ff8fb5"), 0, 7, true)
+		_bar(c, fx, fy + 3.0, 80, 5, f.hp / f.maxhp, Color("#ff4f8b"))
 	for e in enemies:
 		if e.T.get("boss", false) and not e.dead:
 			_txt(c, e.ename, W / 2.0, H - 13, Color("#ff4f8b"), 1, 7, true)
@@ -1666,7 +2032,7 @@ func draw_hud(c: Control) -> void:
 		"clear":
 			_rect(c, 0, 76, W, 46, Color(0, 0, 0, 0.45))
 			_txt(c, "STAGE %d TERMINÉ" % (stage_i + 1), W / 2.0, 96, Color("#3fe0d0"), 1, 12, true)
-			_txt(c, "BONUS VIE  %d" % (int(P.hp) * 50), W / 2.0, 112, Color("#ffd23f"), 1, 7, true)
+			_txt(c, "BONUS VIE  %d" % _hp_bonus(), W / 2.0, 112, Color("#ffd23f"), 1, 7, true)
 		"over":
 			_rect(c, 0, 0, W, H, Color(0.04, 0, 0.04, 0.72))
 			_txt(c, "GAME OVER", W / 2.0, 102, Color("#ff4f8b"), 1, 22, true)
@@ -1676,7 +2042,8 @@ func draw_hud(c: Control) -> void:
 		"win":
 			_rect(c, 0, 0, W, H, Color(0, 0, 0, 0.3))
 			_txt(c, "LA VILLE EST SAUVÉE", W / 2.0, 40, Color("#3fe0d0"), 1, 14, true)
-			_txt(c, "FÉLICITATIONS, " + str(P.h.name), W / 2.0, 58, Color.WHITE, 1, 8, true)
+			var names: Array = players.map(func(q): return q.h.name)
+			_txt(c, "FÉLICITATIONS, " + " & ".join(names), W / 2.0, 58, Color.WHITE, 1, 8, true)
 			_txt(c, "SCORE FINAL %d" % score, W / 2.0, 76, Color("#ffd23f"), 1, 11, true)
 			if mode_t > 1.2 and int(time * 2.0) % 2 == 0:
 				_txt(c, "ENTRÉE POUR REJOUER", W / 2.0, 206, Color("#9a92b5"), 1, 6)
