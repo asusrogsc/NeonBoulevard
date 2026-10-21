@@ -1,12 +1,12 @@
 extends Node3D
 ## NÉON BOULEVARD — beat'em up 2.5D façon Streets of Rage.
-## Logique en "px de jeu" : x = avancée, y = profondeur (150..206), z = hauteur.
+## Logique en "px de jeu" : x = avancée, y = profondeur (150..236), z = hauteur.
 ## Le rendu convertit en 3D : 1 unité = 10 px.
 
 const W := 384.0
 const H := 216.0
 const TOP := 150.0
-const BOT := 206.0
+const BOT := 236.0  # profondeur jouable : de TOP (fond) à BOT (premier plan)
 const GRAV := 620.0
 const S3 := 0.1
 const K := 5.0
@@ -530,7 +530,7 @@ func _start_stage(i: int) -> void:
 	for k in players.size():
 		var pl = players[k]
 		pl.x = 50.0 - k * 14.0
-		pl.y = 172.0 + k * 18.0
+		pl.y = 182.0 + k * 26.0
 		pl.z = 0.0
 		pl.vx = 0.0
 		pl.vz = 0.0
@@ -1307,11 +1307,11 @@ func _ai_think(p, dt: float) -> Dictionary:
 				turn = signf(pr.x - p.x)
 		elif mate and not mate.ai:
 			gx = mate.x - 30.0
-			gy = mate.y + (14.0 if mate.y < 178.0 else -14.0)
+			gy = mate.y + (14.0 if mate.y < (TOP + BOT) / 2.0 else -14.0)
 			go = absf(gx - p.x) > 14.0 or absf(gy - p.y) > 6.0
 		else:
 			gx = p.x + 60.0
-			gy = 178.0
+			gy = (TOP + BOT) / 2.0
 			go = true
 	gx = clampf(gx, cam_x + 18.0, cam_x + W - 18.0)
 	gy = clampf(gy, TOP, BOT)
@@ -1652,6 +1652,10 @@ func _view_left() -> float:
 	return cam_x
 
 
+func _npc_bot() -> float:
+	return 214.0 if mode in ["title", "select"] else BOT
+
+
 func _npc_look() -> Dictionary:
 	return {"skin": _pick(NPC_SKIN), "hair": _pick(NPC_HAIR), "hs": _pick(NPC_HS), "top": _pick(NPC_TOP),
 		"sleeve": randi() % 2, "pants": _pick(NPC_PANTS), "shoe": _pick(["#1a1a1f", "#e8e4dc", "#5a3a20"]),
@@ -1670,7 +1674,7 @@ func _spawn_npc(on_screen := false) -> void:
 	else:
 		n.x = vl - 20.0 if side < 0 else vl + W + 20.0
 		n.face = -side
-	n.y = _rnd(TOP + 2.0, BOT - 2.0)
+	n.y = _rnd(TOP + 2.0, _npc_bot() - 2.0)
 	n.vx = _rnd(15.0, 25.0)
 	n.st = "walk"
 	n.ph = randf() * 6.0
@@ -1738,7 +1742,7 @@ func _upd_npcs(dt: float) -> void:
 				n.x += n.face * 125.0 * dt
 				n.moving = true
 				n.wph += dt * 17.0
-		n.y = clampf(n.y, TOP, BOT)
+		n.y = clampf(n.y, TOP, _npc_bot())
 		if n.x < vl - 60.0 or n.x > vl + W + 60.0:
 			n.dead = true
 	for n in npcs:
@@ -1887,12 +1891,7 @@ func _update(dt: float) -> void:
 			return
 		"select":
 			if I.pL or I.pR:
-				# un seul héros actif : il suit le curseur (comme l'ancien écran de choix)
-				var carry: bool = slots.count("off") == 1 and slots[sel] != "off"
 				sel = 1 - sel
-				if carry:
-					slots[sel] = slots[1 - sel]
-					slots[1 - sel] = "off"
 				_sfx("sel")
 			if I.pU or I.pD:
 				var opts := ["human", "ai", "off"]
