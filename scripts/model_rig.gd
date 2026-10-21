@@ -121,6 +121,9 @@ func _collect_materials(model: Node) -> void:
 				var d: StandardMaterial3D = m.duplicate()
 				d.emission_enabled = true
 				d.emission = Color(0, 0, 0)
+				d.rim_enabled = true
+				d.rim = 0.35
+				d.rim_tint = 0.6
 				mi.set_surface_override_material(si, d)
 				mats.append(d)
 

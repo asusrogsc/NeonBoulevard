@@ -36,6 +36,10 @@ func _mat(col: String, rough := 0.6, metal := 0.0) -> StandardMaterial3D:
 	m.metallic = metal
 	m.emission_enabled = true
 	m.emission = Color(0, 0, 0)
+	# lumière de contour : détache les personnages du décor sombre
+	m.rim_enabled = true
+	m.rim = 0.45
+	m.rim_tint = 0.6
 	mats.append(m)
 	return m
 

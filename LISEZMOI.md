@@ -17,8 +17,17 @@ Tout est généré par le code : les modèles 3D, les décors, les sons et la mu
 - **Coup final** : le KO qui termine un stage déclenche un ralenti avec un flash.
 - **Passants** : des habitants se baladent dans les stages et sur l'écran titre. Les ennemis les ignorent. Si on les frappe, ils sursautent et s'enfuient en courant (ça ne rapporte rien).
 
+## Graphismes
+Quatre niveaux de qualité (F2, sauvegardés) :
+- **Bas** : sans ombres ni effets, image 3D calculée à 77 % puis agrandie (FSR). Pour les petites machines.
+- **Moyen** : ombres, halo des néons, anticrénelage FXAA, vignettage, éclaboussures de pluie.
+- **Haut** (par défaut) : + brouillard volumétrique avec faisceaux sous les lampadaires, reflets sur le sol mouillé (SSR), occlusion ambiante (SSAO), flou du décor lointain, grain et légère aberration chromatique, anticrénelage MSAA 2x + SMAA.
+- **Ultra** : + éclairage indirect (SSIL), MSAA 4x, ombres plus fines, plus de pluie, gouttes sur l'objectif sous la pluie.
+
+Toujours actifs : enseignes qui grésillent, flaques qui ondulent sous la pluie, lumière de contour sur les personnages, étalonnage des couleurs. F3 ajoute un filtre écran cathodique (lignes, grille RVB, bords bombés).
+
 ## Modes de jeu
-À l'écran de choix, chaque héros peut être **Joueur**, **IA** ou **Absent** (← → pour choisir le héros, ↑ ↓ pour changer son rôle) :
+À l'écran de choix, chaque héros peut être **Joueur**, **IA** ou **Absent** (← → pour choisir le héros, ↑ ↓ pour changer son rôle ; ← → ne fait que déplacer le curseur) :
 - **Solo** : un héros joueur, l'autre absent.
 - **Coop 2 joueurs** : les deux héros joueurs, sur le même écran.
 - **Joueur + IA** : ton partenaire est contrôlé par l'ordinateur (il attaque, prend les ennemis à revers, esquive le boss, te laisse la nourriture si tu es plus blessé que lui).
@@ -43,7 +52,8 @@ En solo, le joueur peut utiliser les deux jeux de touches. En coop, la manette 1
 | Pause | P ou Échap / Select |
 | Son on/off | M |
 | Plein écran | F11 |
-| Qualité haute/rapide | F2 |
+| Niveau de qualité (Bas / Moyen / Haut / Ultra) | F2 |
+| Écran CRT rétro | F3 |
 
 ## Organisation
 - `scripts/main.gd` : boucle de jeu, combats, IA des ennemis et du partenaire, zones, caméra, HUD
@@ -52,5 +62,7 @@ En solo, le joueur peut utiliser les deux jeux de touches. En coop, la manette 1
 - `scripts/stage.gd` : la construction des décors et de l'éclairage
 - `scripts/sfx.gd` : les bruitages et la musique synthétisés
 - `scripts/hud.gd` : la couche 2D
+- `scripts/gfx.gd` : niveaux de qualité, brouillard, néons, pluie au sol, post-effets caméra
+- `scripts/model_rig.gd` : les personnages 3D importés (GLB/FBX) pilotés par les poses du jeu
 
 Pour régler la difficulté, modifie `HEROES` et `ETYPES` en haut de `main.gd` : points de vie, vitesse, dégâts, portée et délai entre les attaques. Les vagues d'ennemis se règlent dans `STAGES`.

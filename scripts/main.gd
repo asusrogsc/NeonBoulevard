@@ -244,7 +244,7 @@ var humans := 1
 var IN: Array = [{}, {}]
 var I := {}
 var dummies := {}
-var high_quality := true
+var gfx: Gfx
 
 var cam: Camera3D
 var world_env: WorldEnvironment
@@ -304,6 +304,9 @@ func _ready() -> void:
 	add_child(sfx)
 	dummies["jade"] = _dummy("jade", 1.0, 0.0)
 	dummies["bruno"] = _dummy("bruno", -1.0, 1.3)
+	gfx = Gfx.new()
+	add_child(gfx)
+	gfx.setup(self)
 	_show_stage(0)
 
 
@@ -373,6 +376,7 @@ func _setup_input() -> void:
 	_add_action("mute", [KEY_M], [], [])
 	_add_action("fullscreen", [KEY_F11], [], [])
 	_add_action("quality", [KEY_F2], [], [])
+	_add_action("crt", [KEY_F3], [], [])
 
 
 func _read_pad(pre: String) -> Dictionary:
@@ -416,20 +420,12 @@ func _process(delta: float) -> void:
 		var m := DisplayServer.window_get_mode()
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if m == DisplayServer.WINDOW_MODE_FULLSCREEN else DisplayServer.WINDOW_MODE_FULLSCREEN)
 	if Input.is_action_just_pressed("quality"):
-		_set_quality(not high_quality)
+		gfx.cycle_level()
+	if Input.is_action_just_pressed("crt"):
+		gfx.toggle_crt()
 	_update(dt)
 	_render(dt)
 	hud.queue_redraw()
-
-
-func _set_quality(hq: bool) -> void:
-	high_quality = hq
-	sun.shadow_enabled = hq
-	for kk in built:
-		var env: Environment = built[kk].env
-		env.ssr_enabled = hq
-		env.ssao_enabled = hq
-	get_viewport().msaa_3d = Viewport.MSAA_2X if hq else Viewport.MSAA_DISABLED
 
 
 # ------------------------------------------------------------------ OUTILS
@@ -2033,8 +2029,8 @@ func _show_stage(i: int) -> void:
 	sun.light_energy = B.sun_energy
 	rain.emitting = B.rain
 	rain.visible = B.rain
-	if not high_quality:
-		_set_quality(false)
+	if gfx:
+		gfx.on_stage(B)
 
 
 func _make_rain() -> void:
@@ -2324,6 +2320,7 @@ func _render(dt: float) -> void:
 	var oy := randf_range(-sk, sk) if sk > 0 else 0.0
 	cam.look_at_from_position(Vector3(cx + ox, cam_y + oy, cam_z), Vector3(cx, look_y, look_z), Vector3.UP)
 	rain.position = Vector3(cx, 22, 2)
+	gfx.update(dt, cx)
 
 
 # ------------------------------------------------------------------ HUD
@@ -2360,6 +2357,10 @@ func draw_hud(c: Control) -> void:
 		_rect(c, 0, 0, W, H, Color(1, 1, 1, minf(0.85, scr_flash)))
 	if fade > 0.0:
 		_rect(c, 0, 0, W, H, Color(0, 0, 0, fade))
+	if gfx and gfx.toast_t > 0.0:
+		var ta := clampf(gfx.toast_t * 2.0, 0.0, 1.0)
+		_rect(c, W / 2.0 - 70, 196, 140, 13, Color(0, 0, 0, 0.6 * ta))
+		_txt(c, gfx.toast, W / 2.0, 205.5, Color(1, 0.82, 0.25, ta), 1, 6, true)
 
 
 func _draw_hud_main(c: Control) -> void:
@@ -2378,7 +2379,7 @@ func _draw_hud_main(c: Control) -> void:
 		_txt(c, "UNE NUIT, DEUX POINGS, UNE VILLE", W / 2.0, 110, Color("#e9e4f5"), 1, 6)
 		if int(time * 2.0) % 2 == 0:
 			_txt(c, "APPUIE SUR ENTRÉE", W / 2.0, 130, Color("#ffd23f"), 1, 9, true)
-		_txt(c, "J1 : ZQSD + J/K/L (coup/saut/spécial)   ·   J2 : flèches + pavé 1/2/3   ·   P : pause   M : son   F11 : plein écran", W / 2.0, 210, Color(0.8, 0.78, 0.9, 0.8), 1, 4.2)
+		_txt(c, "J1 : ZQSD + J/K/L   ·   J2 : flèches + pavé 1/2/3   ·   P : pause   M : son   F11 : plein écran   F2 : qualité   F3 : écran CRT", W / 2.0, 210, Color(0.8, 0.78, 0.9, 0.8), 1, 4.2)
 		return
 	if mode == "select":
 		_rect(c, 0, 0, W, H, Color(0.03, 0.02, 0.08, 0.3))

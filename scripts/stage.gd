@@ -90,7 +90,7 @@ static func noise_tex(freq: float, seed_: int, c0: Color, c1: Color, size := 512
 	return t
 
 
-static func neon(parent: Node3D, text: String, pos: Vector3, col: Color) -> void:
+static func neon(parent: Node3D, text: String, pos: Vector3, col: Color) -> Label3D:
 	var f := SystemFont.new()
 	f.font_names = PackedStringArray(["Impact", "Arial Black", "Segoe UI Black", "Arial"])
 	f.font_weight = 800
@@ -105,6 +105,49 @@ static func neon(parent: Node3D, text: String, pos: Vector3, col: Color) -> void
 	l.shaded = false
 	l.position = pos
 	parent.add_child(l)
+	return l
+
+
+## Enseigne qui pourra grésiller (animée par gfx.gd)
+static func flicker(labels: Array, mats: Array, lights: Array) -> Dictionary:
+	for m in mats:
+		m.set_meta("e0", m.emission_energy_multiplier)
+	for l in lights:
+		l.set_meta("e0", l.light_energy)
+	return {"labels": labels, "mats": mats, "lights": lights}
+
+
+const PUDDLE_SHADER := """
+shader_type spatial;
+render_mode cull_disabled;
+uniform vec3 base_color = vec3(0.07, 0.06, 0.12);
+uniform float freq = 1.7;
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+void fragment() {
+	// ronds de pluie qui s'agrandissent dans la flaque
+	vec2 w = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xz * freq;
+	vec2 n = vec2(0.0);
+	for (int i = -1; i <= 1; i++) {
+		for (int j = -1; j <= 1; j++) {
+			vec2 cell = floor(w) + vec2(float(i), float(j));
+			float h = hash(cell);
+			float t = fract(TIME * 0.8 + h);
+			vec2 c = cell + vec2(hash(cell + 3.1), hash(cell + 7.7));
+			vec2 d = w - c;
+			float r = length(d);
+			float front = t * 0.9;
+			float a = exp(-pow((r - front) * 12.0, 2.0)) * (1.0 - t);
+			n += d / max(r, 0.001) * a * cos((r - front) * 40.0);
+		}
+	}
+	vec3 wn = normalize(vec3(n.x * 0.5, 1.0, n.y * 0.5));
+	NORMAL = normalize((VIEW_MATRIX * vec4(wn, 0.0)).xyz);
+	ALBEDO = base_color;
+	METALLIC = 0.6;
+	ROUGHNESS = 0.06;
+	SPECULAR = 0.7;
+}
+"""
 
 
 static func make_env(top: String, horizon: String, ground: String, fogc: String, fog_d: float, amb: float) -> Environment:
@@ -165,7 +208,9 @@ static func city(L: float) -> Dictionary:
 	sw.uv1_scale = Vector3(WW / 4.0, 1, 1)
 	add(root, box(WW, 0.32, 4.2), sw, Vector3(L / 2.0, 0.16, -5.35))
 	add(root, box(WW, 0.34, 0.3), mat("#6a6382", 0.6), Vector3(L / 2.0, 0.17, -3.3))
-	var pm := mat("#0d0b16", 0.02, 0.6)
+	var pm := ShaderMaterial.new()
+	pm.shader = Shader.new()
+	pm.shader.code = PUDDLE_SHADER
 	for i in 24:
 		var pd := add(root, cyl(1.0, 1.0, 0.01, 24), pm, Vector3(R.randf() * L, 0.006, -2.5 + R.randf() * 13.0), false)
 		pd.scale = Vector3(1.5 + R.randf() * 2.5, 1, 0.6 + R.randf() * 0.6)
@@ -191,6 +236,7 @@ static func city(L: float) -> Dictionary:
 	var awn := [mat("#a8324a", 0.8), mat("#2a7a7a", 0.8), mat("#7a5a2a", 0.8)]
 	var polem := mat("#16121f", 0.4, 0.7)
 	var lampm := unlit("#fff1cf", 3.0)
+	var neons := []
 	var i := 0
 	var bx := -25.6
 	while bx < L + 30.0:
@@ -218,8 +264,11 @@ static func city(L: float) -> Dictionary:
 		var tube := emat(sc, 3.0)
 		add(root, box(9.0, 0.08, 0.08), tube, Vector3(bx + 6.4, 6.42, -7.02), false)
 		add(root, box(9.0, 0.08, 0.08), tube, Vector3(bx + 6.4, 4.78, -7.02), false)
-		neon(root, s[0], Vector3(bx + 6.4, 5.6, -7.03), sc)
-		omni(root, Vector3(bx + 6.4, 5.0, -5.4), sc, 2.2, 14.0)
+		var lb := neon(root, s[0], Vector3(bx + 6.4, 5.6, -7.03), sc)
+		var ol := omni(root, Vector3(bx + 6.4, 5.0, -5.4), sc, 2.2, 14.0)
+		ol.light_volumetric_fog_energy = 1.5
+		if i % 3 == 1:
+			neons.append(flicker([lb], [tube], [ol]))
 		if i % 3 == 1:
 			var aw := add(root, box(7.2, 0.15, 1.8), awn[i % 3], Vector3(bx + 4.2, 4.75, -6.5))
 			aw.rotation.x = 0.35
@@ -233,6 +282,7 @@ static func city(L: float) -> Dictionary:
 			sl.rotation.x = -PI / 2.0
 			sl.light_color = Color("#ffd9a0")
 			sl.light_energy = 5.0
+			sl.light_volumetric_fog_energy = 3.5
 			sl.spot_range = 14.0
 			sl.spot_angle = 42.0
 			root.add_child(sl)
@@ -289,7 +339,8 @@ static func city(L: float) -> Dictionary:
 	return {
 		"node": root,
 		"env": make_env("#070514", "#7a2456", "#0b0814", "#2a1440", 0.011, 0.55),
-		"sun": Color("#bfd0ff"), "sun_energy": 0.55, "rain": true,
+		"sun": Color("#bfd0ff"), "sun_energy": 0.55, "rain": true, "neons": neons,
+		"vfog": {"density": 0.028, "albedo": Color("#b9a8e0"), "emission": Color("#140826")},
 	}
 
 
@@ -334,6 +385,7 @@ static func metro(L: float) -> Dictionary:
 	add(root, box(WW, 0.3, 10.0), mat("#1a1c20", 0.8), Vector3(L / 2.0, 8.4, -7.2), false)
 	# affiches et enseignes de station
 	var ads := ["#ff4f8b", "#3fe0d0", "#ffd23f", "#b47dff", "#7cff6b"]
+	var mneons := []
 	var frame := mat("#0c0a12", 0.4, 0.6)
 	var ax := 6.0
 	var k := 0
@@ -341,16 +393,27 @@ static func metro(L: float) -> Dictionary:
 		add(root, box(5.4, 3.4, 0.1), frame, Vector3(ax, 2.6, -11.15), false)
 		add(root, quad(5.0, 3.0), emat(ads[k % ads.size()], 0.9), Vector3(ax, 2.6, -11.08), false)
 		if k % 3 == 1:
-			neon(root, "STATION NÉON", Vector3(ax + 9.0, 6.6, -11.1), Color("#3fe0d0"))
+			var st := neon(root, "STATION NÉON", Vector3(ax + 9.0, 6.6, -11.1), Color("#3fe0d0"))
+			if k % 2 == 0:
+				mneons.append(flicker([st], [], []))
 		k += 1
 		ax += 17.0
 	# tubes fluorescents sous l'auvent
 	var tubem := unlit("#e8fff4", 2.6)
 	var lx := 0.0
 	while lx < L + 20.0:
-		add(root, box(3.0, 0.12, 0.25), tubem, Vector3(lx, 8.2, -4.8), false)
 		if int(lx) % 18 == 0:
-			omni(root, Vector3(lx, 7.0, -3.0), Color("#d8fff0"), 2.4, 16.0)
+			var tl := omni(root, Vector3(lx, 7.0, -3.0), Color("#d8fff0"), 2.4, 16.0)
+			tl.light_volumetric_fog_energy = 1.6
+			if int(lx) % 54 == 18:
+				# un tube fluorescent fatigué qui clignote
+				var tm := emat("#e8fff4", 2.6)
+				add(root, box(3.0, 0.12, 0.25), tm, Vector3(lx, 8.2, -4.8), false)
+				mneons.append(flicker([], [tm], [tl]))
+			else:
+				add(root, box(3.0, 0.12, 0.25), tubem, Vector3(lx, 8.2, -4.8), false)
+		else:
+			add(root, box(3.0, 0.12, 0.25), tubem, Vector3(lx, 8.2, -4.8), false)
 		lx += 6.0
 	# piliers au bord du quai
 	var pil := mat("#d8d0c0", 0.5)
@@ -377,8 +440,9 @@ static func metro(L: float) -> Dictionary:
 		cx += 22.2
 	# entrée du tunnel et quai du boss
 	add(root, box(14, 10, 0.5), mat("#0a0a0c", 0.9), Vector3(L + 8.0, 3.3, -11.0), false)
-	neon(root, "QUAI 0", Vector3(L - 12.0, 6.6, -11.1), Color("#ff4f8b"))
-	omni(root, Vector3(L - 12.0, 5.5, -8.0), Color("#ff4f8b"), 3.0, 18.0)
+	var q0 := neon(root, "QUAI 0", Vector3(L - 12.0, 6.6, -11.1), Color("#ff4f8b"))
+	var q0l := omni(root, Vector3(L - 12.0, 5.5, -8.0), Color("#ff4f8b"), 3.0, 18.0)
+	mneons.append(flicker([q0], [], [q0l]))
 	neon(root, "SORTIE →", Vector3(L * 0.3, 7.4, -11.1), Color("#7cff6b"))
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
@@ -401,7 +465,8 @@ static func metro(L: float) -> Dictionary:
 	env.fog_density = 0.012
 	return {
 		"node": root, "env": env,
-		"sun": Color("#cfe8ff"), "sun_energy": 0.3, "rain": false,
+		"sun": Color("#cfe8ff"), "sun_energy": 0.3, "rain": false, "neons": mneons,
+		"vfog": {"density": 0.022, "albedo": Color("#c8e8dc"), "emission": Color("#04100c")},
 	}
 
 
@@ -464,6 +529,7 @@ static func docks(L: float) -> Dictionary:
 		sl.rotation.x = -PI / 2.0
 		sl.light_color = Color("#ffb46a")
 		sl.light_energy = 6.0
+		sl.light_volumetric_fog_energy = 3.0
 		sl.spot_range = 16.0
 		sl.spot_angle = 45.0
 		root.add_child(sl)
@@ -511,10 +577,12 @@ static func docks(L: float) -> Dictionary:
 	add(root, quad(16, 10), mat("#14151b", 0.6, 0.2), Vector3(wx0 + 14.0, 5, -8.98), false)
 	add(root, box(16, 0.8, 0.05), emat("#e8c23a", 1.2), Vector3(wx0 + 14.0, 10.2, -8.96), false)
 	add(root, box(10.4, 2.2, 0.3), mat("#0b0812", 0.5, 0.4), Vector3(wx0 + 14.0, 13, -8.95))
-	neon(root, "QUAI 9", Vector3(wx0 + 14.0, 13, -8.78), Color("#ff4f8b"))
-	omni(root, Vector3(wx0 + 14.0, 12, -6.0), Color("#ff4f8b"), 3.0, 20.0)
+	var q9 := neon(root, "QUAI 9", Vector3(wx0 + 14.0, 13, -8.78), Color("#ff4f8b"))
+	var q9l := omni(root, Vector3(wx0 + 14.0, 12, -6.0), Color("#ff4f8b"), 3.0, 20.0)
 	return {
 		"node": root,
 		"env": make_env("#04101a", "#d0603a", "#0b0d10", "#2a3a44", 0.008, 0.6),
 		"sun": Color("#ffd2b0"), "sun_energy": 0.7, "rain": false,
+		"neons": [flicker([q9], [], [q9l])],
+		"vfog": {"density": 0.016, "albedo": Color("#e8c4a8"), "emission": Color("#120a06")},
 	}
