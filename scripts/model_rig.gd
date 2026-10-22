@@ -192,6 +192,9 @@ func _collect_materials(model: Node) -> void:
 				var d: StandardMaterial3D = m.duplicate()
 				d.emission_enabled = true
 				d.emission = Color(0, 0, 0)
+				# certains exports (Sketchfab) déclarent la peau « tout métal » : elle devient noire
+				if d.metallic > 0.9 and d.metallic_texture == null:
+					d.metallic = 0.0
 				d.rim_enabled = true
 				d.rim = 0.35
 				d.rim_tint = 0.6

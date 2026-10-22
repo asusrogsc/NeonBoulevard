@@ -34,6 +34,22 @@ const LOOKS := {
 			"lThighBend": "L_UpperLeg_a", "lShin": "L_Foreleg_a", "lFoot": "L_Foot_a", "lToe": "L_Toe_a",
 			"rShldrBend": "R_UpperArm_a", "rForearmBend": "R_Forearm_a", "rHand": "R_Hand_a",
 			"lShldrBend": "L_UpperArm_a", "lForearmBend": "L_Forearm_a", "lHand": "L_Hand_a"}},
+	"airi": {"skin": "#f0c8a8", "hair": "#b08a5a", "hs": "pony", "top": "#f08aa0", "sleeve": 0, "pants": "#f08aa0", "shoe": "#e05a78", "acc": "#e05a78", "bulk": 0.95, "s": 1.0,
+		"model": "res://models/airi.glb", "model_scale": 0.98, "bones": {
+			"hip": "root hips", "abdomenLower": "spine 1", "abdomenUpper": "spine 2", "chestLower": "spine 3", "chestUpper": "spine 4",
+			"neckLower": "head neck lower", "head": "head neck upper",
+			"rThighBend": "leg right thigh", "rShin": "leg right knee", "rFoot": "leg right ankle", "rToe": "leg right toes",
+			"lThighBend": "leg left thigh", "lShin": "leg left knee", "lFoot": "leg left ankle", "lToe": "leg left toes",
+			"rShldrBend": "arm right shoulder 2", "rForearmBend": "arm right elbow", "rHand": "arm right wrist",
+			"lShldrBend": "arm left shoulder 2", "lForearmBend": "arm left elbow", "lHand": "arm left wrist"}},
+	"sophie": {"skin": "#f4d4bc", "hair": "#f0d070", "hs": "pony", "top": "#1a7a90", "sleeve": 1, "pants": "#a0a090", "shoe": "#6a4a2a", "acc": "#c02020", "bulk": 0.92, "s": 0.98,
+		"model": "res://models/sophie.glb", "model_scale": 0.95, "bones": {
+			"hip": "pelvis", "abdomenLower": "spine_01", "abdomenUpper": "spine_02", "chestLower": "spine_03",
+			"neckLower": "neck_01", "head": "head",
+			"rThighBend": "thigh_r", "rShin": "calf_r", "rFoot": "foot_r", "rToe": "ball_r",
+			"lThighBend": "thigh_l", "lShin": "calf_l", "lFoot": "foot_l", "lToe": "ball_l",
+			"rShldrBend": "upperarm_r", "rForearmBend": "lowerarm_r", "rHand": "hand_r",
+			"lShldrBend": "upperarm_l", "lForearmBend": "lowerarm_l", "lHand": "hand_l"}},
 	"vipere": {"skin": "#c99a78", "hair": "#0f1a14", "hs": "pony", "top": "#127a5a", "sleeve": 1, "pants": "#0e1612", "shoe": "#0b0b0d", "acc": "#c6ff3f", "bulk": 1.12, "s": 1.22, "coat": 1},
 }
 
@@ -84,9 +100,9 @@ const ETYPES := {
 const STAGES := [
 	{"name": "BOULEVARD NÉON", "len": 1520.0, "kind": "city", "music": "city",
 		"zones": [{"lock": 384.0, "waves": [["punk", "punk"], ["punk", "rodeur"]]},
-			{"lock": 770.0, "waves": [["punk", "rodeur", "punk"], ["rodeur", "rodeur", "punk"]]},
-			{"lock": 1150.0, "waves": [["punk", "punk", "punk"], ["costaud"]]},
-			{"lock": 1520.0, "waves": [["costaud", "punk", "rodeur"], ["punk", "rodeur"]]}],
+			{"lock": 770.0, "waves": [["punk", "maitre", "punk"], ["rodeur", "rodeur", "punk"]]},
+			{"lock": 1150.0, "waves": [["punk", "punk", "punk"], ["costaud", "maitre"]]},
+			{"lock": 1520.0, "waves": [["costaud", "punk", "rodeur"], ["maitre", "rodeur"]]}],
 		"props": [[200, 170, "can", "apple"], [560, 196, "can", "pipe"], [690, 165, "crate", "cash"], [980, 190, "can", "apple"], [1300, 168, "crate", "chicken"]]},
 	{"name": "LES DOCKS", "len": 1560.0, "kind": "docks", "music": "docks",
 		"zones": [{"lock": 400.0, "waves": [["rodeur", "punk", "punk"], ["costaud", "rodeur"]]},
@@ -104,6 +120,7 @@ const STAGES := [
 
 const VULN := ["idle", "walk", "enter", "eatk", "hurt", "held", "bwind", "brec", "charge", "stomp", "wait", "eshoot", "fan"]
 const UP_DELAY := 0.35  # au sol, temps minimum avant de pouvoir se relever
+const NPC_MODELS := ["fany", "airi", "sophie"]  # passants en modèles importés (en plus du vieil homme)
 
 
 class Ent:
@@ -566,10 +583,13 @@ func _start_stage(i: int) -> void:
 	sfx.set_track(S.get("music", "city"))
 	sfx.set_music(true)
 	_show_stage(i)
-	_reset_npcs(2)
+	_reset_npcs(3)
 
 
 func _spawn_enemy(et: String, side: float) -> Ent:
+	# de temps en temps, un punk est remplacé par un vieux maître
+	if et == "punk" and randf() < 0.15:
+		et = "maitre"
 	var T: Dictionary = ETYPES[et]
 	var lk := et
 	if et == "punk" and randf() < 0.5:
@@ -1751,19 +1771,21 @@ func _npc_bot() -> float:
 func _npc_look() -> Dictionary:
 	# passants en modèles 3D importés (s'ils sont présents), sinon générés
 	var r := randf()
-	if r < 0.28 and ResourceLoader.exists(LOOKS.vieux.model):
+	if r < 0.22 and ResourceLoader.exists(LOOKS.vieux.model):
 		return LOOKS.vieux
-	if r >= 0.28 and r < 0.5 and ResourceLoader.exists(LOOKS.fany.model):
-		return LOOKS.fany
+	if r >= 0.22 and r < 0.6:
+		var dispo := NPC_MODELS.filter(func(k): return ResourceLoader.exists(LOOKS[k].model))
+		if not dispo.is_empty():
+			return LOOKS[_pick(dispo)]
 	return {"skin": _pick(NPC_SKIN), "hair": _pick(NPC_HAIR), "hs": _pick(NPC_HS), "top": _pick(NPC_TOP),
 		"sleeve": randi() % 2, "pants": _pick(NPC_PANTS), "shoe": _pick(["#1a1a1f", "#e8e4dc", "#5a3a20"]),
 		"acc": _pick(NPC_TOP), "bulk": _rnd(0.88, 1.15), "s": _rnd(0.9, 1.04)}
 
 
-func _spawn_npc(on_screen := false) -> void:
+func _spawn_npc(on_screen := false, forced := {}) -> void:
 	var n := Ent.new()
 	n.kind = "npc"
-	n.look = _npc_look()
+	n.look = forced if not forced.is_empty() else _npc_look()
 	var vl := _view_left()
 	var side := -1.0 if randf() < 0.5 else 1.0
 	if on_screen:
@@ -1788,8 +1810,15 @@ func _reset_npcs(count: int) -> void:
 	for n in npcs:
 		_free_rig(n)
 	npcs = []
+	# au début de chaque stage, les passants en modèles importés sont toujours là
+	var firsts := []
+	var keys: Array = NPC_MODELS.duplicate()
+	keys.shuffle()
+	for key in ["vieux"] + keys:
+		if ResourceLoader.exists(LOOKS[key].model):
+			firsts.append(LOOKS[key])
 	for k in count:
-		_spawn_npc(true)
+		_spawn_npc(true, firsts[k] if k < firsts.size() else {})
 	npc_t = _rnd(3.0, 6.0)
 
 
@@ -1808,7 +1837,7 @@ func _upd_npcs(dt: float) -> void:
 	npc_t -= dt
 	if npc_t <= 0.0:
 		npc_t = _rnd(3.0, 7.0)
-		if npcs.size() < 3:
+		if npcs.size() < 4:
 			_spawn_npc()
 	for n in npcs:
 		n.t += dt

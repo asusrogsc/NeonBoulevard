@@ -15,7 +15,7 @@ Tout est généré par le code : les modèles 3D, les décors, les sons et la mu
 - **Armes** : tuyau (lent, longue portée, puissant) et couteau (rapide). On les trouve dans les caisses et poubelles, on les ramasse en marchant dessus. Elles s'usent et se cassent, et on les lâche si on est mis au sol.
 - **Combos** : le compteur de coups s'affiche à côté de la barre de vie. À partir de 5 coups enchaînés, un bonus de points est donné.
 - **Coup final** : le KO qui termine un stage déclenche un ralenti avec un flash.
-- **Passants** : des habitants se baladent dans les stages et sur l'écran titre, dont un vieil homme qui clopine et Fany (si `models/fany.glb` est présent). Les ennemis les ignorent. Si on les frappe, ils sursautent et s'enfuient en courant (ça ne rapporte rien).
+- **Passants** : des habitants se baladent dans les stages et sur l'écran titre, dont un vieil homme qui clopine, Fany, Airi et Sophie (s'ils sont présents dans `models/`). Les ennemis les ignorent. Si on les frappe, ils sursautent et s'enfuient en courant (ça ne rapporte rien).
 - **Au sol** : quand un héros est mis à terre, il y reste jusqu'à ce que le joueur bouge (direction ou bouton). Pendant ce temps, les ennemis viennent le piétiner. Le partenaire IA se relève tout seul.
 
 ## Graphismes
@@ -69,7 +69,8 @@ En solo, le joueur peut utiliser les deux jeux de touches. En coop, la manette 1
 - `scripts/model_rig.gd` : les personnages 3D importés (GLB/FBX) pilotés par les poses du jeu
 - `outils/auto_rig.gd` : ajoute un squelette à un modèle qui n'en a pas (utilisé pour `models/vieux.glb`, tiré de `models/Oldman.glb`)
 - `outils/daz_vers_glb.gd` : convertit et allège un personnage exporté de DAZ (utilisé pour `models/jade.glb`)
+- `outils/alleger.gd` : allège un modèle riggé (textures réduites, animations retirées, matériaux « tout métal » corrigés), utilisé pour `models/airi.glb` et `models/sophie.glb`
 
-Un personnage importé peut avoir des os nommés autrement que ceux de DAZ : il suffit de donner la correspondance dans la clé `"bones"` de son look (voir `LOOKS["fany"]` dans `main.gd`). `models/fany.glb` est un modèle extrait d'un jeu commercial : il est exclu du dépôt par le `.gitignore` et ne doit pas être publié.
+Un personnage importé peut avoir des os nommés autrement que ceux de DAZ : il suffit de donner la correspondance dans la clé `"bones"` de son look (voir `LOOKS["fany"]` dans `main.gd`).
 
 Pour régler la difficulté, modifie `HEROES` et `ETYPES` en haut de `main.gd` : points de vie, vitesse, dégâts, portée et délai entre les attaques. Les vagues d'ennemis se règlent dans `STAGES`.
