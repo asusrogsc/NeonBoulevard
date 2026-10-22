@@ -1,9 +1,9 @@
 78098b89c88a74ebe8c20117b8754620
-::res://::1792618573
+::res://::1792697562
 gitignore.txt::TextFile::-1::1792601909::0::1::::<><><>0<>0<><>::
-LISEZMOI.md::TextFile::-1::1792617611::0::1::::<><><>0<>0<><>::
+LISEZMOI.md::TextFile::-1::1792696788::0::1::::<><><>0<>0<><>::
 main.tscn::PackedScene::-1::1792435082::0::1::::<><><>0<>0<><>::res://scripts/main.gd
-::res://models/::1792613782
+::res://models/::1792696789
 jade.glb::PackedScene::8936153660252408744::1792611609::1792611691::1::::<><><>0<>0<>6267621c1999ed0ba6eb1c9fd2b36fef<>res://.godot/imported/jade.glb-2bac86759163df59a55470c24272dd2a.scn::uid://bim87wierupbu::::res://models/jade_Fingernails_albedo.webp<>uid://csrci6c3s1pbd::::res://models/jade_Torso_albedo.webp<>uid://basynl3i4awnw::::res://models/jade_Pupils_albedo.webp<>uid://c0k8ittk44dc7::::res://models/jade_Face_albedo.webp<>uid://e13rfbq1ryaq::::res://models/jade_Lips_albedo.webp<>uid://sppgvtqjnde8::::res://models/jade_Teeth_albedo.webp<>uid://cgl05hi2gvsip::::res://models/jade_Ears_albedo.webp<>uid://7wsm2c7jhydq::::res://models/jade_Legs_albedo.webp<>uid://jk25jccubfh4::::res://models/jade_Torso_albedo2.webp<>uid://cvbmvrhng5hmg::::res://models/jade_Frame Pins_albedo.webp<>uid://d32nudocmv3cp::::res://models/jade_Back_albedo.webp<>uid://df40rd7tdt1ah::::res://models/jade_Cap_albedo.webp<>uid://dslwpj5wo8pp5::::res://models/jade_InSole_albedo.webp<>uid://d4aely1ocme7f::::res://models/jade_Upper_1_albedo.webp<>uid://cdydnolosdoov::::res://models/jade_Panties_albedo.webp<>uid://bp1882ghwfn15::::res://models/jade_Skirt_albedo.webp<>uid://tjv2eikrprjk::::res://models/jade_Top_albedo.webp
 jade_Back_albedo.webp::CompressedTexture2D::9181113088392962795::1792611688::1792611691::1::::<><><>0<>0<>1d568a52a80401b9bed79fc3494a72be<>res://.godot/imported/jade_Back_albedo.webp-f6df6ceacde3c0e77501f7463e41f75a.s3tc.ctex::
 jade_Cap_albedo.webp::CompressedTexture2D::7571621715324594071::1792611688::1792611691::1::::<><><>0<>0<>50a06dbec83923931b359e022d5b175b<>res://.godot/imported/jade_Cap_albedo.webp-a1c232846d887692af28565bfdbd5981.s3tc.ctex::
@@ -22,13 +22,24 @@ jade_Top_albedo.webp::CompressedTexture2D::1353490925122198600::1792611689::1792
 jade_Torso_albedo2.webp::CompressedTexture2D::654036778822133671::1792611688::1792611691::1::::<><><>0<>0<>c1973aa209f688cf799d7ee38a239147<>res://.godot/imported/jade_Torso_albedo2.webp-1d449e32db003e63ed35b48b08590b51.s3tc.ctex::
 jade_Torso_albedo.webp::CompressedTexture2D::6071472327637321809::1792611686::1792611691::1::::<><><>0<>0<>4fb8aad2703de6218b744f8c9262fd07<>res://.godot/imported/jade_Torso_albedo.webp-ac6115d875b533d7bce2ac58223c6327.s3tc.ctex::
 jade_Upper_1_albedo.webp::CompressedTexture2D::9195002329650826261::1792611689::1792611691::1::::<><><>0<>0<>f34e6606c6227567755a8f2b8eb815fa<>res://.godot/imported/jade_Upper_1_albedo.webp-49ef464eef63583edbfe9cd5c3389e55.s3tc.ctex::
-::res://scripts/::1792617629
+Oldman.glb::PackedScene::5385424119218516758::1585117354::1792697567::1::::<><><>0<>0<>947809b98f29d2ec71d95e83cbb06b0a<>res://.godot/imported/Oldman.glb-3af7ae7ed478f9e787b577cec01e16ab.scn::uid://ctgqm3u0i862j::::res://models/Oldman_0.png<>uid://bic8l7gum262g::::res://models/Oldman_1.png<>uid://b0kf7sigkx1m4::::res://models/Oldman_2.png
+Oldman_0.png::CompressedTexture2D::6119810067142100675::1792697562::1792697568::1::::<><><>0<>0<>968d79b358e77cac8d5fe25589b473b7<>res://.godot/imported/Oldman_0.png-d73c8c80eb3cf21227f86cf462832561.s3tc.ctex::
+Oldman_1.png::CompressedTexture2D::2954085183741600432::1792697563::1792697568::1::::<><><>0<>0<>56d3b0016ecba3a9dcb0759918b32039<>res://.godot/imported/Oldman_1.png-afb116e14420210656089cab7a0a66b5.s3tc.ctex::
+Oldman_2.png::CompressedTexture2D::4162147240618945717::1792697564::1792697568::1::::<><><>0<>0<>64877b29c6ee1bd53fc8b19bc4d55c08<>res://.godot/imported/Oldman_2.png-a967b690368be5dfcc96b9021b2a0923.s3tc.ctex::
+vieux_03 - Default_normal.webp::CompressedTexture2D::7406530287582370794::1792697567::1792697568::1::::<><><>0<>0<>93032455c57ed370f2c2b90b0839b88c<>res://.godot/imported/vieux_03 - Default_normal.webp-d881597632fb1058d4693a1446c911e4.s3tc.ctex::
+vieux_03 - Default_orm.webp::CompressedTexture2D::4792632861048755876::1792697567::1792697568::1::::<><><>0<>0<>a997df1e9fafba150174b446f471ec19<>res://.godot/imported/vieux_03 - Default_orm.webp-d0450e89e165a0843a9afd3ba10da45b.s3tc.ctex::
+vieux_03 - Default_albedo.webp::CompressedTexture2D::7757283191820478877::1792697567::1792697568::1::::<><><>0<>0<>ac7772103e95bd5d7830e75343bddbc2<>res://.godot/imported/vieux_03 - Default_albedo.webp-21ab250d56f47ff73d0fb95c23e93431.s3tc.ctex::
+vieux.glb::PackedScene::1152357871622399191::1792696789::1792697567::1::::<><><>0<>0<>827ef5aff760f15abcda3c0a6670012a<>res://.godot/imported/vieux.glb-1780759998473e2e06415cf9c01717b3.scn::uid://dirxk54maeha8::::res://models/vieux_03 - Default_albedo.webp<>uid://cajt70idwpkrc::::res://models/vieux_03 - Default_orm.webp<>uid://ddr1qbk3i7lq5::::res://models/vieux_03 - Default_normal.webp
+::res://outils/::1792696790
+auto_rig.gd::GDScript::531163980903623132::1792696789::0::1::::<>SceneTree<><>0<>0<><>::
+daz_vers_glb.gd::GDScript::897693746233541965::1792696790::0::1::::<>SceneTree<><>0<>0<><>::
+::res://scripts/::1792696788
 city.gd::GDScript::3148162706924504852::1792617603::0::1::::CityBuilder<>RefCounted<><>0<>0<><>::
 gfx.gd::GDScript::265792816960884464::1792617609::0::1::::Gfx<>Node<><>0<>0<><>::
 hud.gd::GDScript::3267460290045559860::1792435085::0::1::::Hud<>Control<><>0<>0<><>::
-main.gd::GDScript::8728336770053759493::1792617607::0::1::::<>Node3D<><>0<>0<><>::
-model_rig.gd::GDScript::8406504258196660160::1792613757::0::1::::ModelRig<>Node3D<><>0<>0<><>::
-pose.gd::GDScript::8830965607652299345::1792606483::0::1::::Pose<>RefCounted<><>0<>0<><>::
+main.gd::GDScript::8728336770053759493::1792696787::0::1::::<>Node3D<><>0<>0<><>::
+model_rig.gd::GDScript::8406504258196660160::1792696788::0::1::::ModelRig<>Node3D<><>0<>0<><>::
+pose.gd::GDScript::8830965607652299345::1792696787::0::1::::Pose<>RefCounted<><>0<>0<><>::
 rig.gd::GDScript::6449738052907785188::1792613755::0::1::::Rig<>Node3D<><>0<>0<><>::
 sfx.gd::GDScript::7562075513939939883::1792606483::0::1::::Sfx<>Node<><>0<>0<><>::
 shaders.gd::GDScript::7904256847162427799::1792617604::0::1::::Shaders<>RefCounted<><>0<>0<><>::

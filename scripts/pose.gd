@@ -73,6 +73,10 @@ static func get_pose(e, time: float) -> Dictionary:
 					if ph == 0:
 						return {"lean": 25, "fl": [40, 70], "bl": [-30, 60], "fa": [30, 100], "ba": [0, 90]}
 					return {"air": true, "lift": 4, "lean": -15, "fl": [82, 2], "bl": [-30, 110], "fa": [60, 100], "ba": [-40, 60]}
+				"gstomp":
+					if ph == 0:
+						return {"lean": 14, "fl": [62, 95], "bl": [-8, 10], "fa": [30, 90], "ba": [-20, 70]}
+					return {"lean": 22, "fl": [34, 8], "bl": [-14, 14], "fa": [20, 80], "ba": [-30, 60]}
 				"heavy":
 					if ph == 0:
 						return {"lean": -10, "fl": [16, 14], "bl": [-12, 12], "fa": [-40, 70], "ba": [10, 100]}
@@ -104,6 +108,8 @@ static func get_pose(e, time: float) -> Dictionary:
 			return {"lean": -35, "fl": [20, 10], "bl": [-20, 10], "fa": [170, 10], "ba": [160, 10]}
 		"spec":
 			return {"lean": -10, "fl": [92, 2], "bl": [-6, 8], "fa": [90, 10], "ba": [-90, 10]}
+		"evade":
+			return {"air": true, "lift": 2, "lean": -16, "fl": [40, 70], "bl": [-10, 60], "fa": [70, 90], "ba": [40, 100]}
 		"eshoot", "fan":
 			# lancer de couteau : armé derrière la tête, puis bras tendu
 			var w := 0.45 if st == "fan" else 0.35

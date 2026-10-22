@@ -10,12 +10,13 @@ Tout est généré par le code : les modèles 3D, les décors, les sons et la mu
 
 ## Contenu
 - **Stages** : Boulevard Néon (pluie de nuit), Les Docks (crépuscule), Le Métro (quai et rame à l'arrêt). Chaque stage a sa musique, et le boss a la sienne.
-- **Ennemis** : Punk, Rôdeur (ruée), Costaud (blindé pendant ses attaques), Lanceuse (garde ses distances et lance des couteaux, on peut les éviter en changeant de ligne ou en sautant).
+- **Ennemis** : Punk, Rôdeur (ruée), Costaud (blindé pendant ses attaques), Lanceuse (garde ses distances et lance des couteaux, on peut les éviter en changeant de ligne ou en sautant), Vieux maître (bandeau rouge : lent, esquive souvent les coups d'un bond en arrière et répond par deux frappes de paume).
 - **Boss** : Le Contremaître (charge, piétinement) et Vipère (ruée rapide, éventail de trois couteaux). Quand un boss tombe, ses renforts tombent avec lui.
 - **Armes** : tuyau (lent, longue portée, puissant) et couteau (rapide). On les trouve dans les caisses et poubelles, on les ramasse en marchant dessus. Elles s'usent et se cassent, et on les lâche si on est mis au sol.
 - **Combos** : le compteur de coups s'affiche à côté de la barre de vie. À partir de 5 coups enchaînés, un bonus de points est donné.
 - **Coup final** : le KO qui termine un stage déclenche un ralenti avec un flash.
-- **Passants** : des habitants se baladent dans les stages et sur l'écran titre. Les ennemis les ignorent. Si on les frappe, ils sursautent et s'enfuient en courant (ça ne rapporte rien).
+- **Passants** : des habitants se baladent dans les stages et sur l'écran titre, dont un vieil homme qui clopine et Fany (si `models/fany.glb` est présent). Les ennemis les ignorent. Si on les frappe, ils sursautent et s'enfuient en courant (ça ne rapporte rien).
+- **Au sol** : quand un héros est mis à terre, il y reste jusqu'à ce que le joueur bouge (direction ou bouton). Pendant ce temps, les ennemis viennent le piétiner. Le partenaire IA se relève tout seul.
 
 ## Graphismes
 Quatre niveaux de qualité (F2, sauvegardés) :
@@ -66,5 +67,9 @@ En solo, le joueur peut utiliser les deux jeux de touches. En coop, la manette 1
 - `scripts/hud.gd` : la couche 2D
 - `scripts/gfx.gd` : niveaux de qualité, brouillard, néons, pluie au sol, post-effets caméra
 - `scripts/model_rig.gd` : les personnages 3D importés (GLB/FBX) pilotés par les poses du jeu
+- `outils/auto_rig.gd` : ajoute un squelette à un modèle qui n'en a pas (utilisé pour `models/vieux.glb`, tiré de `models/Oldman.glb`)
+- `outils/daz_vers_glb.gd` : convertit et allège un personnage exporté de DAZ (utilisé pour `models/jade.glb`)
+
+Un personnage importé peut avoir des os nommés autrement que ceux de DAZ : il suffit de donner la correspondance dans la clé `"bones"` de son look (voir `LOOKS["fany"]` dans `main.gd`). `models/fany.glb` est un modèle extrait d'un jeu commercial : il est exclu du dépôt par le `.gitignore` et ne doit pas être publié.
 
 Pour régler la difficulté, modifie `HEROES` et `ETYPES` en haut de `main.gd` : points de vie, vitesse, dégâts, portée et délai entre les attaques. Les vagues d'ennemis se règlent dans `STAGES`.

@@ -28,6 +28,9 @@ var down_l := Basis.IDENTITY
 var feet: Array = []
 var foot_rest := 0.0
 var hand: BoneAttachment3D
+var bmap := {}                 # nom DAZ -> nom de l'os dans ce modèle (look "bones")
+var C := Transform3D.IDENTITY  # espace du squelette -> espace du modèle (Y en haut, face à +Z)
+var Cb := Basis.IDENTITY
 
 
 func _init(lk: Dictionary) -> void:
@@ -41,11 +44,22 @@ func _init(lk: Dictionary) -> void:
 	if found.is_empty():
 		model.free()
 		return
+	bmap = lk.get("bones", {})
 	skel = found[0]
 	for s in found:
-		if (s as Skeleton3D).find_bone("rShldrBend") >= 0 and (s as Skeleton3D).find_bone("head") >= 0:
+		if _find(s, "rShldrBend") >= 0 and _find(s, "head") >= 0:
 			skel = s
 			break
+	# certains exports (Blender) ont un squelette « Z en haut » sous un nœud tourné
+	var n: Node = skel
+	while n != null and n != model.get_parent():
+		if n is Node3D:
+			C = (n as Node3D).transform * C
+		if n == model:
+			break
+		n = n.get_parent()
+	C = Transform3D(C.basis, C.origin)
+	Cb = C.basis.orthonormalized()
 	for ap in model.find_children("*", "AnimationPlayer", true, false):
 		ap.queue_free()
 	for s in found:
@@ -59,29 +73,68 @@ func _init(lk: Dictionary) -> void:
 	for s in found:
 		skels.append(_index_bones(s))
 	groups = skels[found.find(skel)].groups
-	var head := skel.find_bone("head")
+	var head := _find(skel, "head")
 	var top := 1.75
 	if head >= 0:
-		top = skel.get_bone_global_rest(head).origin.y + 0.16
+		top = _mpos(skel.get_bone_global_rest(head).origin).y + 0.16
 	k = RIG_HEIGHT * u / top * float(lk.get("model_scale", 1.0))
 	yaw.scale = Vector3(k, k, k)
 	# bras : de la T-pose vers le long du corps
 	down_r = _down_basis("rShldrBend", "rForearmBend", Vector3(-0.12, -1, 0))
 	down_l = _down_basis("lShldrBend", "lForearmBend", Vector3(0.12, -1, 0))
-	for n in ["lToe", "rToe", "lHeel", "rHeel", "lFoot", "rFoot"]:
-		var b := skel.find_bone(n)
+	for fn in ["lToe", "rToe", "lHeel", "rHeel", "lFoot", "rFoot"]:
+		var b := _find(skel, fn)
 		if b >= 0:
 			feet.append(b)
 	foot_rest = INF
 	for b in feet:
-		foot_rest = minf(foot_rest, skel.get_bone_global_rest(b).origin.y)
+		foot_rest = minf(foot_rest, _mpos(skel.get_bone_global_rest(b).origin).y)
 	_collect_materials(model)
-	var hb := skel.find_bone("rHand")
+	var hb := _find(skel, "rHand")
 	if hb >= 0:
 		hand = BoneAttachment3D.new()
-		hand.bone_name = "rHand"
+		hand.bone_name = skel.get_bone_name(hb)
 		skel.add_child(hand)
+	if lk.has("headband") and _find(skel, "head") >= 0:
+		_headband(lk.headband, Color(lk.get("acc", "#d8263a")))
 	ok = true
+
+
+## Bandeau noué autour de la tête : [x, y, z, rayon x, rayon z] en mètres (espace du modèle)
+func _headband(hbd: Array, col: Color) -> void:
+	var att := BoneAttachment3D.new()
+	att.bone_name = skel.get_bone_name(_find(skel, "head"))
+	skel.add_child(att)
+	var head_rest := skel.get_bone_global_rest(_find(skel, "head")).origin
+	var center := Vector3(hbd[0], hbd[1], hbd[2]) - head_rest
+	var m := StandardMaterial3D.new()
+	m.albedo_color = col
+	m.roughness = 0.7
+	m.emission_enabled = true
+	m.emission = Color(0, 0, 0)
+	mats.append(m)
+	var t := TorusMesh.new()
+	t.inner_radius = 0.92
+	t.outer_radius = 1.08
+	t.rings = 24
+	t.ring_segments = 8
+	var ring := MeshInstance3D.new()
+	ring.mesh = t
+	ring.material_override = m
+	ring.position = center
+	ring.scale = Vector3(float(hbd[3]), 0.13, float(hbd[4]))
+	ring.rotation.x = -0.12
+	att.add_child(ring)
+	# les deux pans du nœud qui pendent derrière la tête
+	for k in 2:
+		var tail := MeshInstance3D.new()
+		var b := BoxMesh.new()
+		b.size = Vector3(0.028, 0.15, 0.006)
+		tail.mesh = b
+		tail.material_override = m
+		tail.position = center + Vector3(-0.018 + k * 0.036, -0.07, -float(hbd[4]) - 0.01)
+		tail.rotation = Vector3(0.35, 0, -0.25 + k * 0.5)
+		att.add_child(tail)
 
 
 func _index_bones(sk: Skeleton3D) -> Dictionary:
@@ -102,12 +155,30 @@ func _index_bones(sk: Skeleton3D) -> Dictionary:
 
 
 func _down_basis(a: String, b: String, target: Vector3) -> Basis:
-	var ia := skel.find_bone(a)
-	var ib := skel.find_bone(b)
+	var ia := _find(skel, a)
+	var ib := _find(skel, b)
 	if ia < 0 or ib < 0:
 		return Basis.IDENTITY
-	var dir := (skel.get_bone_global_rest(ib).origin - skel.get_bone_global_rest(ia).origin).normalized()
+	var dir := (_mpos(skel.get_bone_global_rest(ib).origin) - _mpos(skel.get_bone_global_rest(ia).origin)).normalized()
 	return Basis(Quaternion(dir, target.normalized()))
+
+
+## Os correspondant à un nom DAZ (via la table "bones" du look), ou -1
+func _find(sk: Skeleton3D, daz: String) -> int:
+	var nm: String = bmap.get(daz, daz)
+	var i := sk.find_bone(nm)
+	if i >= 0:
+		return i
+	# nom de base sans le suffixe numérique (C_Hip_a -> C_Hip_a_08)
+	for j in sk.get_bone_count():
+		var b := sk.get_bone_name(j)
+		if b.begins_with(nm + "_") and b.substr(nm.length() + 1).is_valid_int():
+			return j
+	return -1
+
+
+func _mpos(p: Vector3) -> Vector3:
+	return C * p
 
 
 func _collect_materials(model: Node) -> void:
@@ -181,6 +252,13 @@ func apply_pose(p: Dictionary, dt: float, snap := false) -> void:
 	for j in 2:
 		E["rThumb%d" % (j + 2)] = fr * Basis(Vector3.UP, 0.5 * (j + 1))
 		E["lThumb%d" % (j + 2)] = fl2 * Basis(Vector3.UP, -0.5 * (j + 1))
+	if not bmap.is_empty() or Cb != Basis.IDENTITY:
+		var E2 := {}
+		var Ci := Cb.inverse()
+		for key in E:
+			var nm: String = bmap.get(key, key)
+			E2[nm] = Ci * E[key] * Cb
+		E = E2
 	for d in skels:
 		var sk: Skeleton3D = d.skel
 		for base in E:
@@ -202,7 +280,7 @@ func apply_pose(p: Dictionary, dt: float, snap := false) -> void:
 	elif rot == 0.0:
 		var low := INF
 		for b in feet:
-			low = minf(low, skel.get_bone_global_pose(b).origin.y)
+			low = minf(low, _mpos(skel.get_bone_global_pose(b).origin).y)
 		if low < INF:
 			off = -(low - foot_rest) * k
 	yaw.position.y = off

@@ -21,6 +21,10 @@ const LOOKS := {
 	"costaud": {"skin": "#a86f48", "hair": "#000000", "hs": "bald", "top": "#c4682a", "sleeve": 0, "pants": "#c4682a", "shoe": "#2a1d14", "acc": "#ffd23f", "bulk": 1.45, "s": 1.28},
 	"boss": {"skin": "#d9a686", "hair": "#e9e9ef", "hs": "slick", "top": "#3b3a48", "sleeve": 1, "pants": "#22222b", "shoe": "#0e0e12", "acc": "#d8263a", "bulk": 1.4, "s": 1.42, "coat": 1},
 	"lanceuse": {"skin": "#e0a882", "hair": "#d8263a", "hs": "pony", "top": "#1a1a22", "sleeve": 1, "pants": "#5a1f2e", "shoe": "#121016", "acc": "#ff3f6e", "bulk": 0.92, "s": 0.98},
+	# le vieil homme importé (outils/auto_rig.gd) : passant neutre, et ennemi avec un bandeau rouge
+	"vieux": {"skin": "#e0b494", "hair": "#e8e8e8", "hs": "buzz", "top": "#3a4050", "sleeve": 1, "pants": "#3a4a7a", "shoe": "#101012", "acc": "#c8b89a", "bulk": 0.92, "s": 0.95, "model": "res://models/vieux.glb", "model_scale": 0.93},
+	"maitre": {"skin": "#e0b494", "hair": "#e8e8e8", "hs": "buzz", "top": "#3a4050", "sleeve": 1, "pants": "#3a4a7a", "shoe": "#101012", "acc": "#d8263a", "bulk": 0.92, "s": 0.95, "band": 1, "model": "res://models/vieux.glb", "model_scale": 0.97,
+		"headband": [0.0, 1.535, 0.12, 0.09, 0.1]},
 	"vipere": {"skin": "#c99a78", "hair": "#0f1a14", "hs": "pony", "top": "#127a5a", "sleeve": 1, "pants": "#0e1612", "shoe": "#0b0b0d", "acc": "#c6ff3f", "bulk": 1.12, "s": 1.22, "coat": 1},
 }
 
@@ -61,6 +65,9 @@ const ETYPES := {
 	"rodeur": {"names": ["SILEX", "NOX", "VIRGULE", "ORTIE"], "hp": 26.0, "spd": 64.0, "atk": {"id": "dash", "s": 0.38, "a": 0.3, "r": 0.38, "d": 9, "reach": 22.0, "dash": 150.0, "ko": true, "range": 62.0}, "score": 700, "cd": [1.0, 1.9]},
 	"costaud": {"names": ["BARIL", "GRANIT", "TANK"], "hp": 80.0, "spd": 28.0, "atk": {"id": "heavy", "s": 0.48, "a": 0.12, "r": 0.48, "d": 13, "reach": 27.0, "ko": true}, "score": 1500, "cd": [1.0, 2.0], "armor": true},
 	"boss": {"names": ["LE CONTREMAÎTRE"], "hp": 280.0, "spd": 36.0, "atk": {"id": "heavy", "s": 0.4, "a": 0.12, "r": 0.42, "d": 14, "reach": 33.0, "ko": true}, "score": 20000, "cd": [0.7, 1.3], "armor": true, "boss": true, "style": "brute", "summon": ["punk", "punk", "rodeur"]},
+	# vieux maître : lent, esquive souvent les coups et répond par deux frappes de paume
+	"maitre": {"names": ["L'ANCIEN", "PAPY", "LE VIEUX", "GRAND-PÈRE"], "hp": 50.0, "spd": 30.0, "atk": {"id": "jab", "s": 0.16, "a": 0.08, "r": 0.2, "d": 7, "reach": 25.0},
+		"atk2": {"id": "cross", "s": 0.05, "a": 0.08, "r": 0.32, "d": 9, "reach": 27.0, "ko": true}, "score": 1200, "cd": [0.5, 1.1], "dodge": 0.38},
 	"lanceuse": {"names": ["LAME", "VESPA", "SCARLETT", "AIGUILLE"], "hp": 24.0, "spd": 48.0, "atk": {"id": "jab", "s": 0.25, "a": 0.1, "r": 0.3, "d": 5, "reach": 22.0}, "score": 900, "cd": [1.3, 2.3], "ranged": true},
 	"vipere": {"names": ["VIPÈRE"], "hp": 300.0, "spd": 52.0, "atk": {"id": "dash", "s": 0.3, "a": 0.28, "r": 0.4, "d": 13, "reach": 24.0, "dash": 210.0, "ko": true, "range": 75.0}, "score": 30000, "cd": [0.6, 1.2], "armor": true, "boss": true, "style": "vipere", "summon": ["lanceuse", "lanceuse", "punk"]},
 }
@@ -74,19 +81,20 @@ const STAGES := [
 		"props": [[200, 170, "can", "apple"], [560, 196, "can", "pipe"], [690, 165, "crate", "cash"], [980, 190, "can", "apple"], [1300, 168, "crate", "chicken"]]},
 	{"name": "LES DOCKS", "len": 1560.0, "kind": "docks", "music": "docks",
 		"zones": [{"lock": 400.0, "waves": [["rodeur", "punk", "punk"], ["costaud", "rodeur"]]},
-			{"lock": 820.0, "waves": [["punk", "punk", "rodeur", "rodeur"], ["costaud", "costaud"]]},
+			{"lock": 820.0, "waves": [["punk", "punk", "rodeur", "rodeur"], ["costaud", "maitre"]]},
 			{"lock": 1180.0, "waves": [["rodeur", "lanceuse", "punk"], ["costaud", "punk", "lanceuse"]]},
 			{"lock": 1560.0, "boss": true, "waves": [["boss"]]}],
 		"props": [[260, 190, "crate", "apple"], [640, 170, "crate", "knife"], [1000, 192, "can", "chicken"], [1320, 170, "crate", "apple"], [1420, 195, "can", "chicken"]]},
 	{"name": "LE MÉTRO", "len": 1600.0, "kind": "metro", "music": "metro",
 		"zones": [{"lock": 400.0, "waves": [["lanceuse", "punk", "punk"], ["rodeur", "rodeur", "lanceuse"]]},
 			{"lock": 820.0, "waves": [["costaud", "lanceuse", "lanceuse"], ["punk", "punk", "rodeur", "rodeur"]]},
-			{"lock": 1220.0, "waves": [["costaud", "costaud", "lanceuse"], ["rodeur", "lanceuse", "punk", "punk"]]},
+			{"lock": 1220.0, "waves": [["costaud", "maitre", "lanceuse"], ["rodeur", "lanceuse", "maitre", "punk"]]},
 			{"lock": 1600.0, "boss": true, "waves": [["vipere"]]}],
 		"props": [[240, 172, "crate", "pipe"], [600, 192, "can", "apple"], [900, 168, "crate", "knife"], [1100, 190, "can", "chicken"], [1380, 172, "crate", "apple"], [1480, 194, "can", "cash"]]},
 ]
 
 const VULN := ["idle", "walk", "enter", "eatk", "hurt", "held", "bwind", "brec", "charge", "stomp", "wait", "eshoot", "fan"]
+const UP_DELAY := 0.35  # au sol, temps minimum avant de pouvoir se relever
 
 
 class Ent:
@@ -552,6 +560,8 @@ func _spawn_enemy(et: String, side: float) -> Ent:
 	var lk := et
 	if et == "punk" and randf() < 0.5:
 		lk = "punk2"
+	if not LOOKS.has(lk):
+		lk = "punk"
 	var e := Ent.new()
 	e.etype = et
 	e.T = T
@@ -765,6 +775,14 @@ func _break_prop(pr) -> void:
 
 
 func _hit_enemy(e, d: float, ko: bool, dir: float) -> void:
+	if e.T.get("dodge", 0.0) > 0.0 and e.st in ["idle", "walk", "wait"] and e.z <= 0 and randf() < float(e.T.dodge):
+		e.st = "evade"
+		e.t = 0.0
+		e.vx = dir * 130.0
+		e.face = -dir
+		_sfx("swing")
+		_pop(e.x, e.y, 50.0, "ESQUIVE", Color("#c9c9d6"))
+		return
 	e.hp -= d
 	e.flash = 0.08
 	score += int(d * 10)
@@ -857,6 +875,29 @@ func _release_of(p) -> void:
 		e.holder = null
 		e.nograb = 0.8
 		p.held = null
+
+
+## Coup porté à un joueur au sol (piétinement) : des dégâts, mais il reste à terre
+func _hit_player_down(p, d: float, src) -> bool:
+	if p.st != "lying" or p.inv > 0 or p.t < UP_DELAY:
+		return false
+	p.hp -= d
+	p.flash = 0.1
+	_sfx("hit")
+	_shake(1.5)
+	_hitstop(0.04)
+	_spark(p.x, p.y, 6.0, false)
+	if p.hp <= 0:
+		p.hp = 0.0
+		p.dead = true
+		_set_p_of(p, "dead")
+		_sfx("ko")
+	return true
+
+
+func _set_p_of(p, st: String) -> void:
+	p.st = st
+	p.t = 0.0
 
 
 func _hit_player(p, d: float, ko: bool, src) -> bool:
@@ -1103,12 +1144,16 @@ func _upd_player(dt: float) -> void:
 			P.vz -= GRAV * dt
 			if P.z <= 0:
 				P.z = 0.0
-				_set_p("dead" if P.dead else "lying")
+				# après une réapparition (invincible) on retombe sur ses pieds
+				_set_p("dead" if P.dead else ("getup" if P.inv > 0.5 else "lying"))
 				_shake(2.0)
 				_sfx("land")
 				_dust(P.x, P.y)
 		"lying":
-			if P.t > 0.75:
+			# on reste à terre tant que le joueur ne bouge pas (direction ou bouton)
+			var wants: bool = In.get("l", false) or In.get("r", false) or In.get("u", false) or In.get("d", false) \
+				or In.get("pPunch", false) or In.get("pJump", false) or In.get("pSpec", false)
+			if P.t > UP_DELAY and wants:
 				_set_p("getup")
 		"getup":
 			if P.t > 0.32:
@@ -1203,6 +1248,11 @@ func _ai_think(p, dt: float) -> Dictionary:
 			gx = p.x
 			gy = sh.y - 16.0 if (p.y < sh.y and sh.y - 16.0 >= TOP) or sh.y + 16.0 > BOT else sh.y + 16.0
 	# 2) Chope : genoux, parfois projection
+	if p.st == "lying":
+		# l'IA se relève d'elle-même après un petit moment
+		if p.t > 0.55:
+			out.r = true
+		return out
 	if p.st == "grab" and p.held:
 		out.pPunch = true
 		if randf() < 0.3:
@@ -1398,8 +1448,13 @@ func _upd_enemies(dt: float) -> void:
 				var side := -1.0 if e.x < tg.x else 1.0
 				var tx2: float
 				var ty2: float
+				var tg_down: bool = tg.st == "lying" and tg.inv <= 0 and tg.t > UP_DELAY and not T.get("ranged", false)
 				if e.engaged and pv:
 					tx2 = tg.x + side * (float(TA.reach) - 5.0)
+					ty2 = tg.y
+				elif e.engaged and tg_down and not boss:
+					# on s'approche pour frapper le joueur au sol
+					tx2 = tg.x + side * 12.0
 					ty2 = tg.y
 				else:
 					tx2 = tg.x + side * (64.0 + (e.slot % 3) * 16.0)
@@ -1462,6 +1517,13 @@ func _upd_enemies(dt: float) -> void:
 					e.t = 0.0
 					e.atk = TA
 					e.hit_done = false
+					e.combo = 0
+				elif e.engaged and tg_down and not boss and e.cd <= 0 and adx < 18.0 and ady < 6.0:
+					e.st = "eatk"
+					e.t = 0.0
+					e.atk = {"id": "gstomp", "s": 0.32, "a": 0.08, "r": 0.4, "d": 4 if not T.get("armor", false) else 6, "reach": 22.0, "ground": true}
+					e.hit_done = false
+					e.combo = 0
 			"eatk":
 				var A: Dictionary = e.atk
 				var s: float = A.s
@@ -1473,12 +1535,30 @@ func _upd_enemies(dt: float) -> void:
 					for pl in alive:
 						var rel: float = (pl.x - e.x) * e.face
 						if rel > -4.0 and rel < float(A.reach) and absf(pl.y - e.y) < 8.0 and pl.z < 14:
-							if _hit_player(pl, float(A.d), A.get("ko", false), e):
+							var landed: bool = _hit_player_down(pl, float(A.d), e) if A.get("ground", false) else _hit_player(pl, float(A.d), A.get("ko", false), e)
+							if landed:
 								e.hit_done = true
 				if e.t >= s + a + r:
+					if T.has("atk2") and e.combo == 0 and randf() < 0.6 and not A.get("ground", false):
+						# deuxième frappe enchaînée (vieux maître)
+						e.atk = T.atk2
+						e.t = 0.0
+						e.hit_done = false
+						e.combo = 1
+					else:
+						e.st = "idle"
+						e.t = 0.0
+						e.cd = _rnd(T.cd[0], T.cd[1]) * (1.4 if A.get("ground", false) else 1.0)
+			"evade":
+				# esquive : petit bond en arrière, puis contre-attaque rapide
+				e.x += e.vx * dt
+				e.vx *= 0.86
+				e.z = maxf(0.0, sin(minf(e.t / 0.3, 1.0) * PI) * 7.0)
+				if e.t > 0.3:
+					e.z = 0.0
 					e.st = "idle"
 					e.t = 0.0
-					e.cd = _rnd(T.cd[0], T.cd[1])
+					e.cd = 0.08
 			"eshoot", "fan":
 				var fan: bool = e.st == "fan"
 				var rel_t := 0.45 if fan else 0.35
@@ -1541,7 +1621,8 @@ func _upd_enemies(dt: float) -> void:
 					_dust(e.x, e.y)
 					for pl in alive:
 						if absf(pl.x - e.x) < 95.0 and absf(pl.y - e.y) < 24.0 and pl.z < 4:
-							_hit_player(pl, 11.0, true, e)
+							if not _hit_player(pl, 11.0, true, e):
+								_hit_player_down(pl, 6.0, e)
 				if e.t > 1.1:
 					e.st = "idle"
 					e.t = 0.0
@@ -1654,6 +1735,8 @@ func _npc_bot() -> float:
 
 
 func _npc_look() -> Dictionary:
+	if randf() < 0.3 and ResourceLoader.exists(LOOKS.vieux.model):
+		return LOOKS.vieux
 	return {"skin": _pick(NPC_SKIN), "hair": _pick(NPC_HAIR), "hs": _pick(NPC_HS), "top": _pick(NPC_TOP),
 		"sleeve": randi() % 2, "pants": _pick(NPC_PANTS), "shoe": _pick(["#1a1a1f", "#e8e4dc", "#5a3a20"]),
 		"acc": _pick(NPC_TOP), "bulk": _rnd(0.88, 1.15), "s": _rnd(0.9, 1.04)}
@@ -1673,6 +1756,9 @@ func _spawn_npc(on_screen := false) -> void:
 		n.face = -side
 	n.y = _rnd(TOP + 2.0, _npc_bot() - 2.0)
 	n.vx = _rnd(15.0, 25.0)
+	if n.look.get("model", "") != "":
+		n.etype = "vieux"
+		n.vx = _rnd(9.0, 13.0)
 	n.st = "walk"
 	n.ph = randf() * 6.0
 	n.wph = randf() * 6.0
@@ -1736,7 +1822,7 @@ func _upd_npcs(dt: float) -> void:
 					n.t = 0.0
 					_sfx("yelp")
 			"flee":
-				n.x += n.face * 125.0 * dt
+				n.x += n.face * (80.0 if n.etype == "vieux" else 125.0) * dt
 				n.moving = true
 				n.wph += dt * 17.0
 		n.y = clampf(n.y, TOP, _npc_bot())
@@ -2470,6 +2556,13 @@ func _draw_hud_main(c: Control) -> void:
 			_txt(c, e.ename, W / 2.0, H - 13, Color("#ff4f8b"), 1, 7, true)
 			_bar(c, W / 2.0 - 90, H - 10, 180, 5, e.hp / e.maxhp, Color("#ff4f8b"))
 			break
+	for pl in players:
+		if pl.out or pl.ai or pl.st != "lying" or pl.t < 0.9:
+			continue
+		if int(time * 3.0) % 2 == 0:
+			var lp: Vector2 = cam.unproject_position(Vector3(pl.x * S3, 22.0 * S3, (pl.y - 178.0) * S3)) / K
+			var who := "" if humans <= 1 else "J%d " % (pl.pid + 1)
+			_txt(c, who + "BOUGE POUR TE RELEVER !", lp.x, lp.y, Color("#ffd23f"), 1, 5.5, true)
 	for t in texts:
 		var sp: Vector2 = cam.unproject_position(Vector3(t.x * S3, t.h * S3, (t.y - 178.0) * S3)) / K
 		var col: Color = t.c
