@@ -25,6 +25,15 @@ const LOOKS := {
 	"vieux": {"skin": "#e0b494", "hair": "#e8e8e8", "hs": "buzz", "top": "#3a4050", "sleeve": 1, "pants": "#3a4a7a", "shoe": "#101012", "acc": "#c8b89a", "bulk": 0.92, "s": 0.95, "model": "res://models/vieux.glb", "model_scale": 0.93},
 	"maitre": {"skin": "#e0b494", "hair": "#e8e8e8", "hs": "buzz", "top": "#3a4050", "sleeve": 1, "pants": "#3a4a7a", "shoe": "#101012", "acc": "#d8263a", "bulk": 0.92, "s": 0.95, "band": 1, "model": "res://models/vieux.glb", "model_scale": 0.97,
 		"headband": [0.0, 1.535, 0.12, 0.09, 0.1]},
+	# Fany (modèle importé, passante neutre). "bones" : correspondance noms DAZ -> os de ce modèle
+	"fany": {"skin": "#f0c8a8", "hair": "#2a1a14", "hs": "pony", "top": "#d8d8e0", "sleeve": 0, "pants": "#1a1a1e", "shoe": "#1a1a1e", "acc": "#c03040", "bulk": 0.95, "s": 1.0,
+		"model": "res://models/fany.glb", "model_scale": 0.97, "bones": {
+			"hip": "C_Hip_a", "abdomenLower": "C_Spine_a", "abdomenUpper": "C_Spine_b", "chestLower": "C_Spine_c", "chestUpper": "C_Spine_d",
+			"neckLower": "C_Neck_a", "head": "C_Head_a",
+			"rThighBend": "R_UpperLeg_a", "rShin": "R_Foreleg_a", "rFoot": "R_Foot_a", "rToe": "R_Toe_a",
+			"lThighBend": "L_UpperLeg_a", "lShin": "L_Foreleg_a", "lFoot": "L_Foot_a", "lToe": "L_Toe_a",
+			"rShldrBend": "R_UpperArm_a", "rForearmBend": "R_Forearm_a", "rHand": "R_Hand_a",
+			"lShldrBend": "L_UpperArm_a", "lForearmBend": "L_Forearm_a", "lHand": "L_Hand_a"}},
 	"vipere": {"skin": "#c99a78", "hair": "#0f1a14", "hs": "pony", "top": "#127a5a", "sleeve": 1, "pants": "#0e1612", "shoe": "#0b0b0d", "acc": "#c6ff3f", "bulk": 1.12, "s": 1.22, "coat": 1},
 }
 
@@ -315,6 +324,11 @@ func _ready() -> void:
 	gfx = Gfx.new()
 	add_child(gfx)
 	gfx.setup(self)
+	# préchargement en arrière-plan des modèles importés (évite une saccade à leur première apparition)
+	for lk in LOOKS.values():
+		var mp: String = lk.get("model", "")
+		if mp != "" and ResourceLoader.exists(mp):
+			ResourceLoader.load_threaded_request(mp)
 	_show_stage(0)
 
 
@@ -1735,8 +1749,12 @@ func _npc_bot() -> float:
 
 
 func _npc_look() -> Dictionary:
-	if randf() < 0.3 and ResourceLoader.exists(LOOKS.vieux.model):
+	# passants en modèles 3D importés (s'ils sont présents), sinon générés
+	var r := randf()
+	if r < 0.28 and ResourceLoader.exists(LOOKS.vieux.model):
 		return LOOKS.vieux
+	if r >= 0.28 and r < 0.5 and ResourceLoader.exists(LOOKS.fany.model):
+		return LOOKS.fany
 	return {"skin": _pick(NPC_SKIN), "hair": _pick(NPC_HAIR), "hs": _pick(NPC_HS), "top": _pick(NPC_TOP),
 		"sleeve": randi() % 2, "pants": _pick(NPC_PANTS), "shoe": _pick(["#1a1a1f", "#e8e4dc", "#5a3a20"]),
 		"acc": _pick(NPC_TOP), "bulk": _rnd(0.88, 1.15), "s": _rnd(0.9, 1.04)}
@@ -1756,7 +1774,7 @@ func _spawn_npc(on_screen := false) -> void:
 		n.face = -side
 	n.y = _rnd(TOP + 2.0, _npc_bot() - 2.0)
 	n.vx = _rnd(15.0, 25.0)
-	if n.look.get("model", "") != "":
+	if n.look == LOOKS.vieux:
 		n.etype = "vieux"
 		n.vx = _rnd(9.0, 13.0)
 	n.st = "walk"
