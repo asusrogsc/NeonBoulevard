@@ -21,8 +21,9 @@ const LOOKS := {
 	"costaud": {"skin": "#a86f48", "hair": "#000000", "hs": "bald", "top": "#c4682a", "sleeve": 0, "pants": "#c4682a", "shoe": "#2a1d14", "acc": "#ffd23f", "bulk": 1.45, "s": 1.28},
 	"boss": {"skin": "#d9a686", "hair": "#e9e9ef", "hs": "slick", "top": "#3b3a48", "sleeve": 1, "pants": "#22222b", "shoe": "#0e0e12", "acc": "#d8263a", "bulk": 1.4, "s": 1.42, "coat": 1},
 	"lanceuse": {"skin": "#e0a882", "hair": "#d8263a", "hs": "pony", "top": "#1a1a22", "sleeve": 1, "pants": "#5a1f2e", "shoe": "#121016", "acc": "#ff3f6e", "bulk": 0.92, "s": 0.98},
-	# le vieil homme importé (outils/auto_rig.gd) : passant neutre, et ennemi avec un bandeau rouge
-	"vieux": {"skin": "#e0b494", "hair": "#e8e8e8", "hs": "buzz", "top": "#3a4050", "sleeve": 1, "pants": "#3a4a7a", "shoe": "#101012", "acc": "#c8b89a", "bulk": 0.92, "s": 0.95, "model": "res://models/vieux.glb", "model_scale": 0.93},
+	# le vieil homme importé (outils/auto_rig.gd) : passant neutre au bandeau jaune, et ennemi au bandeau rouge
+	"vieux": {"skin": "#e0b494", "hair": "#e8e8e8", "hs": "buzz", "top": "#3a4050", "sleeve": 1, "pants": "#3a4a7a", "shoe": "#101012", "acc": "#ffd23f", "bulk": 0.92, "s": 0.95, "band": 1, "model": "res://models/vieux.glb", "model_scale": 0.93,
+		"headband": [0.0, 1.535, 0.12, 0.09, 0.1]},
 	"maitre": {"skin": "#e0b494", "hair": "#e8e8e8", "hs": "buzz", "top": "#3a4050", "sleeve": 1, "pants": "#3a4a7a", "shoe": "#101012", "acc": "#d8263a", "bulk": 0.92, "s": 0.95, "band": 1, "model": "res://models/vieux.glb", "model_scale": 0.97,
 		"headband": [0.0, 1.535, 0.12, 0.09, 0.1]},
 	# Fany (modèle importé, passante neutre). "bones" : correspondance noms DAZ -> os de ce modèle
@@ -120,8 +121,9 @@ const STAGES := [
 
 const VULN := ["idle", "walk", "enter", "eatk", "hurt", "held", "bwind", "brec", "charge", "stomp", "wait", "eshoot", "fan"]
 const UP_DELAY := 0.35  # au sol, temps minimum avant de pouvoir se relever
-const KISS_DUR := 2.4   # durée de la scène du vieux
-const KISS_HEAL := 20.0
+const KISS_DUR := 3.2   # doit valoir KissScene.DUR
+const KISS_HEAL := 20.0  # soin rendu par le passant
+const KISS_HEAL_MAITRE := 10.0  # soin rendu par le maître
 const NPC_MODELS := ["fany", "airi", "sophie"]  # passants en modèles importés (en plus du vieil homme)
 
 
@@ -171,6 +173,7 @@ class Ent:
 	var rig = null
 	var kiss_cd := 0.0
 	var kiss_target = null
+	var kiss_heal := 0.0
 	# --- joueurs (coop)
 	var pid := 0
 	var ai := false
@@ -944,7 +947,7 @@ func _set_p_of(p, st: String) -> void:
 
 
 func _hit_player(p, d: float, ko: bool, src) -> bool:
-	if p.inv > 0 or p.st in ["fall", "lying", "getup", "dead", "spec", "throw", "kissed"]:
+	if p.inv > 0 or p.st in ["fall", "lying", "getup", "dead", "spec", "throw", "kissanim_hero"]:
 		return false
 	if p.st == "grab" or p.st == "knee":
 		_release_of(p)
@@ -1196,12 +1199,20 @@ func _upd_player(dt: float) -> void:
 			# on reste à terre tant que le joueur ne bouge pas (direction ou bouton)
 			var wants: bool = In.get("l", false) or In.get("r", false) or In.get("u", false) or In.get("d", false) \
 				or In.get("pPunch", false) or In.get("pJump", false) or In.get("pSpec", false)
-			if P.t > UP_DELAY and wants:
+			# un vieux (passant ou maître) qui arrive tout près empêche de se relever
+			var vieux := false
+			for n in npcs + enemies:
+				if n.etype != "vieux" and n.etype != "maitre":
+					continue
+				if n.st == "kissanim" or (n.st == "approach" and absf(n.x - P.x) < 130.0 and absf(n.y - P.y) < 24.0):
+					vieux = true
+					break
+			if P.t > UP_DELAY and wants and not vieux:
 				_set_p("getup")
-		"kissed":
-			# le vieux tient le héros au sol pendant le baiser (voir _upd_npcs)
+		"kissanim_hero":
+			# séquence du baiser : le héros est immobilisé, la pose vient de KissScene
 			P.moving = false
-			if P.kisser == null or not (P.kisser in npcs) or P.kisser.st != "kiss":
+			if P.kisser == null or not (P.kisser in npcs or P.kisser in enemies) or P.kisser.st != "kissanim":
 				_set_p("lying")
 		"getup":
 			if P.t > 0.32:
@@ -1437,7 +1448,7 @@ func _upd_enemies(dt: float) -> void:
 	# Cible de chaque ennemi : le joueur le plus proche (on garde l'ancienne cible si elle reste proche)
 	var pv_of := {}
 	for pl in alive:
-		pv_of[pl] = not (pl.st in ["fall", "lying", "getup", "dead", "kissed"]) and pl.inv <= 0
+		pv_of[pl] = not (pl.st in ["fall", "lying", "getup", "dead", "kissanim_hero"]) and pl.inv <= 0
 	for e in enemies:
 		var best = null
 		var bd := INF
@@ -1473,6 +1484,8 @@ func _upd_enemies(dt: float) -> void:
 		e.cd -= dt
 		if e.nograb > 0:
 			e.nograb -= dt
+		if e.kiss_cd > 0.0:
+			e.kiss_cd -= dt
 		if e.flash > 0:
 			e.flash -= dt
 		e.moving = false
@@ -1567,11 +1580,33 @@ func _upd_enemies(dt: float) -> void:
 					e.hit_done = false
 					e.combo = 0
 				elif e.engaged and tg_down and not boss and e.cd <= 0 and adx < 18.0 and ady < 6.0:
-					e.st = "eatk"
+					# il peut aussi se pencher pour embrasser le héros au sol
+					if e.kiss_cd <= 0.0 and tg.kisser == null and randf() < 0.55:
+						_start_kiss(e, tg, KISS_HEAL_MAITRE, "LE VIEUX MAÎTRE T'EMBRASSE")
+						e.cd = _rnd(0.7, 1.5)
+					else:
+						e.st = "eatk"
+						e.t = 0.0
+						e.atk = {"id": "gstomp", "s": 0.32, "a": 0.08, "r": 0.4, "d": 4 if not T.get("armor", false) else 6, "reach": 22.0, "ground": true}
+						e.hit_done = false
+						e.combo = 0
+						e.cd = 0.3
+			"kissanim":
+				var tpk = e.kiss_target
+				if tpk == null or tpk.st != "kissanim_hero":
+					e.st = "idle"
 					e.t = 0.0
-					e.atk = {"id": "gstomp", "s": 0.32, "a": 0.08, "r": 0.4, "d": 4 if not T.get("armor", false) else 6, "reach": 22.0, "ground": true}
-					e.hit_done = false
-					e.combo = 0
+					e.cd = 0.4
+					e.kiss_target = null
+					e.z = 0.0
+					continue
+				e.face = -tpk.face
+				var ep := KissScene.place(e.t)
+				e.x = tpk.x + tpk.face * float(ep[0])
+				e.y = tpk.y
+				e.z = float(ep[1])
+				if e.t >= KissScene.DUR:
+					_end_kiss(e, tpk, 22.0)
 			"eatk":
 				var A: Dictionary = e.atk
 				var s: float = A.s
@@ -1724,7 +1759,7 @@ func _upd_enemies(dt: float) -> void:
 		for j in range(i + 1, enemies.size()):
 			var a = enemies[i]
 			var b = enemies[j]
-			if a.z > 0 or b.z > 0 or a.st in ["held", "dead"] or b.st in ["held", "dead"]:
+			if a.z > 0 or b.z > 0 or a.st in ["held", "dead", "kissanim"] or b.st in ["held", "dead", "kissanim"]:
 				continue
 			var ddx: float = b.x - a.x
 			var ddy: float = b.y - a.y
@@ -1838,15 +1873,25 @@ func _reset_npcs(count: int) -> void:
 
 
 func _hit_npc(n, dir: float) -> void:
-	# un coup interrompt la scène du vieux
-	if n.st == "kiss":
+	# un coup interrompt la séquence
+	if n.st == "kissanim":
 		var tp = n.kiss_target
-		if tp and tp.st == "kissed":
+		if tp and tp.st == "kissanim_hero":
 			tp.kisser = null
 			tp.st = "lying"
 			tp.t = 0.0
 			kiss_focus = null
 			n.kiss_target = null
+	# le vieux encaisse puis repart tranquillement : il ne fuit pas comme les autres passants
+	if n.etype == "vieux":
+		n.st = "wait"
+		n.t = 0.0
+		n.cd = _rnd(1.0, 2.0)
+		n.flash = 0.1
+		n.z = 0.0
+		_sfx("hit")
+		_spark(n.x, n.y, 30.0 * float(n.look.s), false)
+		return
 	n.st = "hurt"
 	n.t = 0.0
 	n.flash = 0.1
@@ -1856,22 +1901,23 @@ func _hit_npc(n, dir: float) -> void:
 	_spark(n.x, n.y, 30.0 * float(n.look.s), false)
 
 
-## Héros au sol à portée du vieux : c'est lui qui déclenche la scène.
+## Héros au sol à portée du vieux : c'est lui qui déclenche la séquence.
 func _kiss_target(n):
 	for pl in _alive_players():
 		if pl.st != "lying" or pl.t < 0.25 or pl.kisser != null or pl.dead:
 			continue
-		if absf(pl.x - n.x) < 90.0 and absf(pl.y - n.y) < 26.0:
+		if absf(pl.x - n.x) < 240.0 and absf(pl.y - n.y) < 40.0:
 			return pl
 	return null
 
 
-func _start_kiss(n, p) -> void:
-	n.st = "kiss"
+func _start_kiss(n, p, heal := KISS_HEAL, label := "LE VIEUX T'EMBRASSE") -> void:
+	n.st = "kissanim"
 	n.t = 0.0
 	n.kiss_target = p
+	n.kiss_heal = heal
 	p.kisser = n
-	p.st = "kissed"
+	p.st = "kissanim_hero"
 	p.t = 0.0
 	p.vx = 0.0
 	p.vz = 0.0
@@ -1880,19 +1926,21 @@ func _start_kiss(n, p) -> void:
 	kiss_t = 0.0
 	_sfx("kiss")
 	_pop(p.x, p.y, 46.0, "SMACK !", Color("#ff8fb5"))
-	banner = {"t": 0.0, "dur": KISS_DUR, "a": "LE VIEUX T'EMBRASSE", "b": "+%d PV" % int(KISS_HEAL), "warn": false}
+	banner = {"t": 0.0, "dur": KissScene.DUR, "a": label, "b": "+%d PV" % int(heal), "warn": false}
 
 
-func _end_kiss(n, p) -> void:
+func _end_kiss(n, p, cd := 20.0) -> void:
 	n.st = "wait"
 	n.t = 0.0
 	n.cd = _rnd(1.5, 3.0)
-	n.kiss_cd = 45.0
+	n.kiss_cd = cd
 	n.kiss_target = null
+	n.z = 0.0
 	p.kisser = null
-	p.hp = minf(p.maxhp, p.hp + KISS_HEAL)
-	_pop(p.x, p.y, 40.0, "+%d PV" % int(KISS_HEAL), Color("#7cff6b"))
-	if p.st == "kissed":
+	if n.kiss_heal > 0.0:
+		p.hp = minf(p.maxhp, p.hp + n.kiss_heal)
+		_pop(p.x, p.y, 40.0, "+%d PV" % int(n.kiss_heal), Color("#7cff6b"))
+	if p.st == "kissanim_hero":
 		p.st = "lying"
 		p.t = UP_DELAY
 	kiss_focus = null
@@ -1901,9 +1949,17 @@ func _end_kiss(n, p) -> void:
 func _upd_npcs(dt: float) -> void:
 	var vl := _view_left()
 	npc_t -= dt
+	var a_un_vieux := false
+	for n in npcs:
+		if n.etype == "vieux":
+			a_un_vieux = true
+			break
 	if npc_t <= 0.0:
-		npc_t = _rnd(3.0, 7.0)
-		if npcs.size() < 4:
+		npc_t = _rnd(2.0, 4.0)
+		if not a_un_vieux:
+			# on maintient toujours un vieux dans le décor, sinon la séquence ne peut jamais arriver
+			_spawn_npc(false, LOOKS.vieux)
+		elif npcs.size() < 5:
 			_spawn_npc()
 	for n in npcs:
 		n.t += dt
@@ -1943,26 +1999,28 @@ func _upd_npcs(dt: float) -> void:
 					n.kiss_target = null
 					n.kiss_cd = 1.5
 					continue
-				n.y = move_toward(n.y, tp.y, 40.0 * dt)
+				n.y = move_toward(n.y, tp.y, 70.0 * dt)
 				n.face = signf(tp.x - n.x) if n.x != tp.x else 1.0
-				n.x += n.face * 46.0 * dt
+				n.x += n.face * 96.0 * dt
 				n.moving = true
 				n.wph += dt * 12.0
 				if absf(tp.x - n.x) < 14.0 and absf(tp.y - n.y) < 5.0:
 					_start_kiss(n, tp)
-			"kiss":
+			"kissanim":
 				var tp2 = n.kiss_target
-				if tp2 == null or tp2.st != "kissed":
+				if tp2 == null or tp2.st != "kissanim_hero":
 					n.st = "walk"
 					n.t = 0.0
 					n.kiss_target = null
+					n.z = 0.0
 					continue
-				# il s'agenouille du côté de la tête et se penche
 				n.face = -tp2.face
-				n.x = tp2.x + tp2.face * 11.0
+				var np2 := KissScene.place(n.t)
+				n.x = tp2.x + tp2.face * float(np2[0])
 				n.y = tp2.y
-				if n.t >= KISS_DUR:
-					_end_kiss(n, tp2)
+				n.z = float(np2[1])
+				if n.t >= KissScene.DUR:
+					_end_kiss(n, tp2, 20.0)
 			"hurt":
 				n.x += n.vy * dt
 				n.vy *= 0.85
@@ -2040,8 +2098,21 @@ func _stage_clear() -> void:
 	mode_t = 0.0
 	for pl in _alive_players():
 		_release_of(pl)
+		pl.kisser = null
 		pl.st = "win"
 		pl.t = 0.0
+	for n in npcs:
+		if n.st == "kissanim":
+			n.st = "walk"
+			n.kiss_target = null
+			n.z = 0.0
+	for e in enemies:
+		if e.st == "kissanim":
+			e.st = "idle"
+			e.kiss_target = null
+			e.z = 0.0
+	kiss_focus = null
+	kiss_t = 0.0
 	sfx.set_music(false)
 	_sfx("pick")
 	score += _hp_bonus()
@@ -2303,17 +2374,22 @@ func _make_rain() -> void:
 
 
 func _sync_fighter(e, dt: float, vis := true) -> void:
+	var ps := Pose.get_pose(e, time)
 	if e.rig == null:
 		e.rig = _make_rig(e.look)
 		add_child(e.rig)
-		e.rig.apply_pose(Pose.get_pose(e, time), dt, true)
+		e.rig.apply_pose(ps, dt, true)
 	var r = e.rig
 	if r.weapon_kind != e.weapon:
 		r.set_weapon(e.weapon)
 	r.position = Vector3(e.x * S3, e.z * S3, (e.y - 178.0) * S3)
-	r.rotation = Vector3(0, (e.t / 0.55) * PI * 4.0 * e.face if e.st == "spec" else 0.0, 0)
+	# "tilt" bascule le corps entier : les os de vieux.glb ignorent "rot"
+	var rotz := 0.0
+	if e.st == "kissanim":
+		rotz = -deg_to_rad(float(ps.get("tilt", 0.0))) * e.face
+	r.rotation = Vector3(0, (e.t / 0.55) * PI * 4.0 * e.face if e.st == "spec" else 0.0, rotz)
 	r.scale = Vector3(e.face, 1, 1)
-	r.apply_pose(Pose.get_pose(e, time), dt)
+	r.apply_pose(ps, dt)
 	var fm := ""
 	if e.flash > 0:
 		fm = "w"
@@ -2555,7 +2631,7 @@ func _render(dt: float) -> void:
 			if not pl.out:
 				_sync_fighter(pl, pdt)
 		_sync_dyn()
-		# resserrement sur la scène du vieux
+		# resserrement sur la séquence
 		if kiss_focus and is_instance_valid(kiss_focus):
 			cx = kiss_focus.x * S3
 			cam_y = 7.0
@@ -2725,9 +2801,15 @@ func _draw_hud_main(c: Control) -> void:
 			var lp: Vector2 = cam.unproject_position(Vector3(pl.x * S3, 22.0 * S3, (pl.y - 178.0) * S3)) / K
 			var who := "" if humans <= 1 else "J%d " % (pl.pid + 1)
 			_txt(c, who + "BOUGE POUR TE RELEVER !", lp.x, lp.y, Color("#ffd23f"), 1, 5.5, true)
-	# la scène du vieux : cadre rose et cœurs qui tournent autour de la tête
+	# les vieux disponibles portent un cœur au-dessus de la tête
+	for n in npcs + enemies:
+		if n.etype != "vieux" and n.etype != "maitre":
+			continue
+		var vp: Vector2 = cam.unproject_position(Vector3(n.x * S3, 52.0 * S3, (n.y - 178.0) * S3)) / K
+		_txt(c, "♥", vp.x, vp.y, Color(1, 0.55, 0.7, 0.7), 1, 5, true)
+	# la séquence : cadre rose et cœurs qui tournent autour de la tête
 	if kiss_focus and is_instance_valid(kiss_focus) and kiss_t > 0.0:
-		var ka := clampf(minf(kiss_t * 3.0, (KISS_DUR - kiss_t) * 3.0), 0.0, 1.0)
+		var ka := clampf(minf(kiss_t * 3.0, (KissScene.DUR - kiss_t) * 3.0), 0.0, 1.0)
 		_rect(c, 0, 0, W, 2, Color(1, 0.42, 0.63, 0.7 * ka))
 		_rect(c, 0, H - 2, W, 2, Color(1, 0.42, 0.63, 0.7 * ka))
 		var kp: Vector2 = cam.unproject_position(Vector3(kiss_focus.x * S3, 34.0 * S3, (kiss_focus.y - 178.0) * S3)) / K
