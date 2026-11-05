@@ -4,7 +4,10 @@ extends Node3D
 ## mêmes poses que Rig (voir pose.gd). Même interface : apply_pose, set_flash, set_weapon.
 ## Le jeu regarde vers +X ; le modèle importé regarde vers +Z (convention DAZ / glTF).
 ## Les vêtements DAZ ont chacun leur copie du squelette (head_2, pelvis_3…) : chaque
-## rotation est appliquée à l'os ET à toutes ses copies.
+## rotation est appliquée à l'os ET à toutes ses copies, appariées par position.
+##
+## Mode "anim" : les clés de kiss_anim.gd tiennent les os, apply_pose ne gère plus que la
+## bascule au sol et la position.
 
 const D := PI / 180.0
 const RIG_HEIGHT := 48.7  # hauteur du modèle en code (px de jeu), pour garder la même taille
@@ -12,6 +15,7 @@ const RIG_HEIGHT := 48.7  # hauteur du modèle en code (px de jeu), pour garder 
 var ok := false
 var u := 0.1
 var k := 1.0
+var hs := 1.0
 var look: Dictionary
 var tilt: Node3D
 var yaw: Node3D
@@ -31,6 +35,13 @@ var hand: BoneAttachment3D
 var bmap := {}                 # nom DAZ -> nom de l'os dans ce modèle (look "bones")
 var C := Transform3D.IDENTITY  # espace du squelette -> espace du modèle (Y en haut, face à +Z)
 var Cb := Basis.IDENTITY
+var anim_mode := false         # une animation joue : apply_pose ne touche plus aux os
+var kiss_role := ""
+var kiss_keys: Array = []
+var kiss_t := 0.0
+var kiss_hip := -1
+var kiss_bones := 0
+var anim_info := ""
 
 
 func _init(lk: Dictionary) -> void:
@@ -77,6 +88,7 @@ func _init(lk: Dictionary) -> void:
 	var top := 1.75
 	if head >= 0:
 		top = _mpos(skel.get_bone_global_rest(head).origin).y + 0.16
+	hs = top / 1.61  # échelle des positions anatomiques attendues (voir kiss_anim.gd)
 	k = RIG_HEIGHT * u / top * float(lk.get("model_scale", 1.0))
 	yaw.scale = Vector3(k, k, k)
 	# bras : de la T-pose vers le long du corps
@@ -89,6 +101,7 @@ func _init(lk: Dictionary) -> void:
 	foot_rest = INF
 	for b in feet:
 		foot_rest = minf(foot_rest, _mpos(skel.get_bone_global_rest(b).origin).y)
+	_build_near()
 	_collect_materials(model)
 	var hb := _find(skel, "rHand")
 	if hb >= 0:
@@ -139,7 +152,7 @@ func _headband(hbd: Array, col: Color) -> void:
 
 func _index_bones(sk: Skeleton3D) -> Dictionary:
 	var re := RegEx.create_from_string("^(.*)_(\\d+)$")
-	var d := {"skel": sk, "groups": {}, "base_of": {}, "rest": {}}
+	var d := {"skel": sk, "groups": {}, "base_of": {}, "rest": {}, "near": {}, "src_of": {}}
 	for i in sk.get_bone_count():
 		var n := sk.get_bone_name(i)
 		var m := re.search(n)
@@ -152,6 +165,29 @@ func _index_bones(sk: Skeleton3D) -> Dictionary:
 		d.groups[base].append(i)
 		d.rest[i] = sk.get_bone_global_rest(i).basis.orthonormalized()
 	return d
+
+
+## Apparie chaque os du corps à son équivalent dans les squelettes de vêtement,
+## par proximité des positions de repos (les copies portent le même squelette).
+func _build_near() -> void:
+	for d in skels:
+		var sk: Skeleton3D = d.skel
+		for i in skel.get_bone_count():
+			if sk == skel:
+				d.near[i] = i
+				d.src_of[i] = i
+				continue
+			var p := skel.get_bone_global_rest(i).origin
+			var best := -1
+			var bd := 0.02
+			for j in sk.get_bone_count():
+				var dd := p.distance_to(sk.get_bone_global_rest(j).origin)
+				if dd < bd:
+					bd = dd
+					best = j
+			d.near[i] = best
+			if best >= 0:
+				d.src_of[best] = i
 
 
 func _down_basis(a: String, b: String, target: Vector3) -> Basis:
@@ -231,6 +267,14 @@ func apply_pose(p: Dictionary, dt: float, snap := false) -> void:
 	for key in T:
 		cur[key] = lerpf(cur[key], T[key], kk) if cur.has(key) else T[key]
 	var c := cur
+	# mode animation : les clés tiennent les os, on ne fait que poser le nœud
+	if anim_mode:
+		var smp := KissAnim.sample(kiss_keys, kiss_t)
+		kiss_t += dt
+		_apply_anim(smp[1], float(smp[0]))
+		tilt.rotation.z = c.rot
+		tilt.position = Vector3(float(c.ox) * u, float(c.ty) * u, 0.0)
+		return
 	var air: bool = p.get("air", false)
 	var ff := 0.25 if air else clampf(1.0 - absf(c.f0) / (60.0 * D), 0.0, 1.0)
 	var fb := 0.25 if air else clampf(1.0 - absf(c.b0) / (60.0 * D), 0.0, 1.0)
@@ -262,19 +306,7 @@ func apply_pose(p: Dictionary, dt: float, snap := false) -> void:
 			var nm: String = bmap.get(key, key)
 			E2[nm] = Ci * E[key] * Cb
 		E = E2
-	for d in skels:
-		var sk: Skeleton3D = d.skel
-		for base in E:
-			if not d.groups.has(base):
-				continue
-			var Ec: Basis = E[base]
-			for bi in d.groups[base]:
-				var par := sk.get_bone_parent(bi)
-				var Bp: Basis = d.rest[par] if par >= 0 else Basis.IDENTITY
-				var Ep := _effective(d, par, E)
-				var Bc: Basis = d.rest[bi]
-				var local := (Ep * Bp).inverse() * (Ec * Bc)
-				sk.set_bone_pose_rotation(bi, local.get_rotation_quaternion())
+	_apply_bones(E)
 	skel.force_update_all_bone_transforms()
 	# posé au sol : on garde le point le plus bas des pieds sur le sol
 	var off := 0.0
@@ -291,6 +323,50 @@ func apply_pose(p: Dictionary, dt: float, snap := false) -> void:
 	tilt.position = Vector3(float(c.ox) * u, float(c.ty) * u, 0)
 
 
+## Applique un jeu de rotations (os de base -> Basis) à tous les squelettes et copies.
+func _apply_bones(E: Dictionary) -> void:
+	for d in skels:
+		var sk: Skeleton3D = d.skel
+		for base in E:
+			if not d.groups.has(base):
+				continue
+			var Ec: Basis = E[base]
+			for bi in d.groups[base]:
+				var par := sk.get_bone_parent(bi)
+				var Bp: Basis = d.rest[par] if par >= 0 else Basis.IDENTITY
+				var Ep := _effective(d, par, E)
+				var Bc: Basis = d.rest[bi]
+				var local := (Ep * Bp).inverse() * (Ec * Bc)
+				sk.set_bone_pose_rotation(bi, local.get_rotation_quaternion())
+
+
+## Applique une image de l'animation (index d'os du corps -> Basis) à TOUS les squelettes,
+## copies de vêtement comprises, via la table d'appariement "near".
+func _apply_anim(E: Dictionary, hip_y: float) -> void:
+	anim_info = "os=%d  t=%.2f  %s" % [kiss_bones, kiss_t, kiss_role]
+	for d in skels:
+		var sk: Skeleton3D = d.skel
+		for bi in E:
+			var ci: int = d.near.get(bi, -1)
+			if ci < 0:
+				continue
+			var par := sk.get_bone_parent(ci)
+			var Bp: Basis = d.rest[par] if par >= 0 else Basis.IDENTITY
+			var Ep := _effective_src(d, par, E)
+			var Bc: Basis = d.rest[ci]
+			var local := (Ep * Bp).inverse() * (E[bi] * Bc)
+			sk.set_bone_pose_rotation(ci, local.get_rotation_quaternion())
+	if kiss_hip >= 0:
+		for d in skels:
+			if d.skel != skel:
+				continue
+			var ci: int = d.near.get(kiss_hip, -1)
+			if ci >= 0:
+				skel.set_bone_pose_position(ci, Cb.inverse() * Vector3(0.0, hip_y, 0.0))
+	skel.force_update_all_bone_transforms()
+	yaw.position.y = 0.0
+
+
 func _effective(d: Dictionary, bi: int, E: Dictionary) -> Basis:
 	var sk: Skeleton3D = d.skel
 	while bi >= 0:
@@ -299,6 +375,50 @@ func _effective(d: Dictionary, bi: int, E: Dictionary) -> Basis:
 			return E[base]
 		bi = sk.get_bone_parent(bi)
 	return Basis.IDENTITY
+
+
+## idem, mais avec des clés indexées sur les os du corps (mode anim)
+func _effective_src(d: Dictionary, bi: int, E: Dictionary) -> Basis:
+	var sk: Skeleton3D = d.skel
+	while bi >= 0:
+		var src: int = d.src_of.get(bi, -1)
+		if E.has(src):
+			return E[src]
+		bi = sk.get_bone_parent(bi)
+	return Basis.IDENTITY
+
+
+## Lance l'animation du baiser ("kisser" : celui qui embrasse, "victim" : celui au sol).
+func play_kiss(role: String) -> void:
+	if not ok:
+		return
+	if anim_mode and kiss_role == role:
+		return
+	var built := KissAnim.compile(self, role)
+	var keys: Array = built.keys
+	if keys.is_empty():
+		return
+	kiss_bones = 0
+	for kf in keys:
+		kiss_bones += (kf[2] as Dictionary).size()
+	if kiss_bones == 0:
+		return
+	kiss_role = role
+	kiss_keys = keys
+	kiss_hip = int(built.hip)
+	kiss_t = 0.0
+	anim_mode = true
+
+
+## Rend la main aux poses calculées.
+func stop_kiss() -> void:
+	if not anim_mode:
+		return
+	anim_mode = false
+	kiss_role = ""
+	kiss_keys = []
+	kiss_t = 0.0
+	kiss_hip = -1
 
 
 func set_flash(mode: String) -> void:

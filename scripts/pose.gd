@@ -90,10 +90,12 @@ static func get_pose(e, time: float) -> Dictionary:
 			return {"lean": -22, "ht": -15, "fl": [6, 6], "bl": [-16, 10], "fa": [-30, 20], "ba": [-50, 20]}
 		"held":
 			return {"lean": 18, "ht": 20, "fl": [6, 10], "bl": [-10, 12], "fa": [20, 30], "ba": [0, 30]}
-		"kissanim":
-			return KissScene.pose("a", t)
 		"kissanim_hero":
-			return KissScene.pose("b", t)
+			# allongé, la tête renversée en arrière : les os sont tenus par kiss_anim.gd
+			return {"rot": 90.0, "ox": 20, "fl": [4, 0], "bl": [-6, 0], "fa": [165, 10], "ba": [150, 0]}
+		"kissanim":
+			# à genoux au-dessus du héros : les os sont tenus par kiss_anim.gd
+			return {"rot": 0.0, "ox": 0, "fl": [10, 10], "bl": [-10, 10], "fa": [30, 100], "ba": [15, 100]}
 		"fall", "thrown":
 			return {"air": true, "rot": minf(80.0, 25.0 + t * 160.0), "ox": 0, "lean": -10, "fl": [20, 30], "bl": [-10, 20], "fa": [150, 20], "ba": [120, 30]}
 		"lying", "dead":

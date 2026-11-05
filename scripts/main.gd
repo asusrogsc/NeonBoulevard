@@ -121,7 +121,7 @@ const STAGES := [
 
 const VULN := ["idle", "walk", "enter", "eatk", "hurt", "held", "bwind", "brec", "charge", "stomp", "wait", "eshoot", "fan"]
 const UP_DELAY := 0.35  # au sol, temps minimum avant de pouvoir se relever
-const KISS_DUR := 3.2   # doit valoir KissScene.DUR
+const KISS_DUR := 3.0   # doit valoir KissScene.DUR
 const KISS_HEAL := 20.0  # soin rendu par le passant
 const KISS_HEAL_MAITRE := 10.0  # soin rendu par le maître
 const NPC_MODELS := ["fany", "airi", "sophie"]  # passants en modèles importés (en plus du vieil homme)
@@ -1922,6 +1922,10 @@ func _start_kiss(n, p, heal := KISS_HEAL, label := "LE VIEUX T'EMBRASSE") -> voi
 	p.vx = 0.0
 	p.vz = 0.0
 	p.z = 0.0
+	# il se place du côté de la tête : le héros est allongé, la tête vers -face
+	n.face = -p.face
+	n.x = p.x - p.face * KissScene.GAP
+	n.y = p.y
 	kiss_focus = p
 	kiss_t = 0.0
 	_sfx("kiss")
@@ -2389,6 +2393,12 @@ func _sync_fighter(e, dt: float, vis := true) -> void:
 		rotz = -deg_to_rad(float(ps.get("tilt", 0.0))) * e.face
 	r.rotation = Vector3(0, (e.t / 0.55) * PI * 4.0 * e.face if e.st == "spec" else 0.0, rotz)
 	r.scale = Vector3(e.face, 1, 1)
+	# baiser : une vraie animation sur les os prend la main (voir kiss_anim.gd)
+	if r is ModelRig:
+		if e.st == "kissanim" or e.st == "kissanim_hero":
+			r.play_kiss("kisser" if e.st == "kissanim" else "victim")
+		elif r.anim_mode:
+			r.stop_kiss()
 	r.apply_pose(ps, dt)
 	var fm := ""
 	if e.flash > 0:
