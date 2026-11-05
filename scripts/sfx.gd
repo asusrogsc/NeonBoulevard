@@ -40,6 +40,7 @@ func _ready() -> void:
 		"warn": _wav(_mix([_tone(110, 110, 0.25, 0.2, "saw"), _tone(110, 110, 0.25, 0.2, "saw", 0.35)])),
 		"stomp": _wav(_mix([_noise(0.35, 0.8, 0.05), _tone(80, 30, 0.35, 0.6, "sine")])),
 		"yelp": _wav(_mix([_tone(620, 1180, 0.2, 0.13, "tri"), _tone(640, 1220, 0.2, 0.06, "square", 0.02)])),
+		"kiss": _wav(_mix([_tone(900, 1500, 0.09, 0.1, "sine"), _tone(1300, 900, 0.12, 0.08, "sine", 0.1)])),
 		"wpn": _wav(_mix([_tone(1400, 1400, 0.05, 0.1, "square"), _tone(2100, 2100, 0.08, 0.08, "tri", 0.04)])),
 		"wbreak": _wav(_mix([_noise(0.18, 0.5, 0.6), _tone(1800, 600, 0.16, 0.12, "saw")])),
 		"knife": _wav(_mix([_noise(0.1, 0.25, 0.9), _tone(2400, 1600, 0.08, 0.05, "tri")])),

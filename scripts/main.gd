@@ -120,6 +120,8 @@ const STAGES := [
 
 const VULN := ["idle", "walk", "enter", "eatk", "hurt", "held", "bwind", "brec", "charge", "stomp", "wait", "eshoot", "fan"]
 const UP_DELAY := 0.35  # au sol, temps minimum avant de pouvoir se relever
+const KISS_DUR := 2.4   # durée de la scène du vieux
+const KISS_HEAL := 20.0
 const NPC_MODELS := ["fany", "airi", "sophie"]  # passants en modèles importés (en plus du vieil homme)
 
 
@@ -167,6 +169,8 @@ class Ent:
 	var kicked := false
 	var knee_hit := false
 	var rig = null
+	var kiss_cd := 0.0
+	var kiss_target = null
 	# --- joueurs (coop)
 	var pid := 0
 	var ai := false
@@ -174,6 +178,7 @@ class Ent:
 	var out := false
 	var inp := {}
 	var holder = null
+	var kisser = null
 	var target = null
 	var ai_t := 0.0
 	var ai_hold := {}
@@ -269,6 +274,8 @@ var banner = null
 var go_t := 0.0
 var last_foe = null
 var last_foe_t := 0.0
+var kiss_focus = null
+var kiss_t := 0.0
 var sel := 0
 var mode_t := 0.0
 var P = null  # joueur en cours de mise à jour
@@ -551,6 +558,8 @@ func _start_stage(i: int) -> void:
 	texts = []
 	go_t = 0.0
 	last_foe = null
+	kiss_focus = null
+	kiss_t = 0.0
 	props = []
 	for p in S.props:
 		var pr := Prop.new()
@@ -935,7 +944,7 @@ func _set_p_of(p, st: String) -> void:
 
 
 func _hit_player(p, d: float, ko: bool, src) -> bool:
-	if p.inv > 0 or p.st in ["fall", "lying", "getup", "dead", "spec", "throw"]:
+	if p.inv > 0 or p.st in ["fall", "lying", "getup", "dead", "spec", "throw", "kissed"]:
 		return false
 	if p.st == "grab" or p.st == "knee":
 		_release_of(p)
@@ -1189,6 +1198,11 @@ func _upd_player(dt: float) -> void:
 				or In.get("pPunch", false) or In.get("pJump", false) or In.get("pSpec", false)
 			if P.t > UP_DELAY and wants:
 				_set_p("getup")
+		"kissed":
+			# le vieux tient le héros au sol pendant le baiser (voir _upd_npcs)
+			P.moving = false
+			if P.kisser == null or not (P.kisser in npcs) or P.kisser.st != "kiss":
+				_set_p("lying")
 		"getup":
 			if P.t > 0.32:
 				_set_p("idle")
@@ -1423,7 +1437,7 @@ func _upd_enemies(dt: float) -> void:
 	# Cible de chaque ennemi : le joueur le plus proche (on garde l'ancienne cible si elle reste proche)
 	var pv_of := {}
 	for pl in alive:
-		pv_of[pl] = not (pl.st in ["fall", "lying", "getup", "dead"]) and pl.inv <= 0
+		pv_of[pl] = not (pl.st in ["fall", "lying", "getup", "dead", "kissed"]) and pl.inv <= 0
 	for e in enemies:
 		var best = null
 		var bd := INF
@@ -1758,6 +1772,7 @@ func _upd_shots(dt: float) -> void:
 # ------------------------------------------------------------------ PASSANTS
 ## Ils se baladent, s'arrêtent, repartent. Les ennemis les ignorent.
 ## Si on les frappe, ils sursautent puis s'enfuient en courant. Ça ne rapporte rien.
+## Le vieil homme, lui, profite d'un héros à terre pour l'embrasser.
 func _view_left() -> float:
 	if mode in ["title", "select"]:
 		return title_view - W / 2.0
@@ -1823,6 +1838,15 @@ func _reset_npcs(count: int) -> void:
 
 
 func _hit_npc(n, dir: float) -> void:
+	# un coup interrompt la scène du vieux
+	if n.st == "kiss":
+		var tp = n.kiss_target
+		if tp and tp.st == "kissed":
+			tp.kisser = null
+			tp.st = "lying"
+			tp.t = 0.0
+			kiss_focus = null
+			n.kiss_target = null
 	n.st = "hurt"
 	n.t = 0.0
 	n.flash = 0.1
@@ -1830,6 +1854,48 @@ func _hit_npc(n, dir: float) -> void:
 	n.face = dir
 	_sfx("hit")
 	_spark(n.x, n.y, 30.0 * float(n.look.s), false)
+
+
+## Héros au sol à portée du vieux : c'est lui qui déclenche la scène.
+func _kiss_target(n):
+	for pl in _alive_players():
+		if pl.st != "lying" or pl.t < 0.25 or pl.kisser != null or pl.dead:
+			continue
+		if absf(pl.x - n.x) < 90.0 and absf(pl.y - n.y) < 26.0:
+			return pl
+	return null
+
+
+func _start_kiss(n, p) -> void:
+	n.st = "kiss"
+	n.t = 0.0
+	n.kiss_target = p
+	p.kisser = n
+	p.st = "kissed"
+	p.t = 0.0
+	p.vx = 0.0
+	p.vz = 0.0
+	p.z = 0.0
+	kiss_focus = p
+	kiss_t = 0.0
+	_sfx("kiss")
+	_pop(p.x, p.y, 46.0, "SMACK !", Color("#ff8fb5"))
+	banner = {"t": 0.0, "dur": KISS_DUR, "a": "LE VIEUX T'EMBRASSE", "b": "+%d PV" % int(KISS_HEAL), "warn": false}
+
+
+func _end_kiss(n, p) -> void:
+	n.st = "wait"
+	n.t = 0.0
+	n.cd = _rnd(1.5, 3.0)
+	n.kiss_cd = 45.0
+	n.kiss_target = null
+	p.kisser = null
+	p.hp = minf(p.maxhp, p.hp + KISS_HEAL)
+	_pop(p.x, p.y, 40.0, "+%d PV" % int(KISS_HEAL), Color("#7cff6b"))
+	if p.st == "kissed":
+		p.st = "lying"
+		p.t = UP_DELAY
+	kiss_focus = null
 
 
 func _upd_npcs(dt: float) -> void:
@@ -1843,7 +1909,15 @@ func _upd_npcs(dt: float) -> void:
 		n.t += dt
 		if n.flash > 0:
 			n.flash -= dt
+		if n.kiss_cd > 0.0:
+			n.kiss_cd -= dt
 		n.moving = false
+		if n.etype == "vieux" and n.st in ["walk", "wait"] and n.kiss_cd <= 0.0:
+			var tg_k = _kiss_target(n)
+			if tg_k:
+				n.st = "approach"
+				n.t = 0.0
+				n.kiss_target = tg_k
 		match n.st:
 			"walk":
 				n.x += n.face * n.vx * dt
@@ -1861,6 +1935,34 @@ func _upd_npcs(dt: float) -> void:
 					n.cd = _rnd(3.0, 7.0)
 					if randf() < 0.25:
 						n.face = -n.face
+			"approach":
+				var tp = n.kiss_target
+				if tp == null or tp.st != "lying" or tp.kisser != null:
+					n.st = "walk"
+					n.t = 0.0
+					n.kiss_target = null
+					n.kiss_cd = 1.5
+					continue
+				n.y = move_toward(n.y, tp.y, 40.0 * dt)
+				n.face = signf(tp.x - n.x) if n.x != tp.x else 1.0
+				n.x += n.face * 46.0 * dt
+				n.moving = true
+				n.wph += dt * 12.0
+				if absf(tp.x - n.x) < 14.0 and absf(tp.y - n.y) < 5.0:
+					_start_kiss(n, tp)
+			"kiss":
+				var tp2 = n.kiss_target
+				if tp2 == null or tp2.st != "kissed":
+					n.st = "walk"
+					n.t = 0.0
+					n.kiss_target = null
+					continue
+				# il s'agenouille du côté de la tête et se penche
+				n.face = -tp2.face
+				n.x = tp2.x + tp2.face * 11.0
+				n.y = tp2.y
+				if n.t >= KISS_DUR:
+					_end_kiss(n, tp2)
 			"hurt":
 				n.x += n.vy * dt
 				n.vy *= 0.85
@@ -2056,6 +2158,8 @@ func _update(dt: float) -> void:
 				go_t = 0.0
 				last_foe = null
 				slowmo = 0.0
+				kiss_focus = null
+				kiss_t = 0.0
 				_reset_npcs(0)
 			return
 		"pause":
@@ -2083,6 +2187,10 @@ func _update(dt: float) -> void:
 		go_t -= dt
 	if last_foe_t > 0:
 		last_foe_t -= dt
+	if kiss_focus and is_instance_valid(kiss_focus):
+		kiss_t += dt
+	else:
+		kiss_t = 0.0
 	if hitstop > 0:
 		hitstop -= dt
 		_upd_fx(dt)
@@ -2447,6 +2555,13 @@ func _render(dt: float) -> void:
 			if not pl.out:
 				_sync_fighter(pl, pdt)
 		_sync_dyn()
+		# resserrement sur la scène du vieux
+		if kiss_focus and is_instance_valid(kiss_focus):
+			cx = kiss_focus.x * S3
+			cam_y = 7.0
+			cam_z = 20.0
+			look_y = 1.6
+			look_z = (kiss_focus.y - 178.0) * S3
 	for k in dummies:
 		if dummies[k].rig:
 			dummies[k].rig.visible = show_dummies
@@ -2610,6 +2725,15 @@ func _draw_hud_main(c: Control) -> void:
 			var lp: Vector2 = cam.unproject_position(Vector3(pl.x * S3, 22.0 * S3, (pl.y - 178.0) * S3)) / K
 			var who := "" if humans <= 1 else "J%d " % (pl.pid + 1)
 			_txt(c, who + "BOUGE POUR TE RELEVER !", lp.x, lp.y, Color("#ffd23f"), 1, 5.5, true)
+	# la scène du vieux : cadre rose et cœurs qui tournent autour de la tête
+	if kiss_focus and is_instance_valid(kiss_focus) and kiss_t > 0.0:
+		var ka := clampf(minf(kiss_t * 3.0, (KISS_DUR - kiss_t) * 3.0), 0.0, 1.0)
+		_rect(c, 0, 0, W, 2, Color(1, 0.42, 0.63, 0.7 * ka))
+		_rect(c, 0, H - 2, W, 2, Color(1, 0.42, 0.63, 0.7 * ka))
+		var kp: Vector2 = cam.unproject_position(Vector3(kiss_focus.x * S3, 34.0 * S3, (kiss_focus.y - 178.0) * S3)) / K
+		for i in 3:
+			var ang := time * 1.6 + i * TAU / 3.0
+			_txt(c, "♥", kp.x + cos(ang) * 12.0, kp.y - 6.0 + sin(ang) * 5.0, Color(1, 0.42, 0.63, ka), 1, 6, true)
 	for t in texts:
 		var sp: Vector2 = cam.unproject_position(Vector3(t.x * S3, t.h * S3, (t.y - 178.0) * S3)) / K
 		var col: Color = t.c

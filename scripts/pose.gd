@@ -90,6 +90,12 @@ static func get_pose(e, time: float) -> Dictionary:
 			return {"lean": -22, "ht": -15, "fl": [6, 6], "bl": [-16, 10], "fa": [-30, 20], "ba": [-50, 20]}
 		"held":
 			return {"lean": 18, "ht": 20, "fl": [6, 10], "bl": [-10, 12], "fa": [20, 30], "ba": [0, 30]}
+		"kissed":
+			# allongé, la tête renversée en arrière, les bras qui remontent
+			return {"rot": 90.0, "ox": 20, "lean": -18, "ht": -12, "fl": [4, 0], "bl": [-6, 0], "fa": [150, 20], "ba": [120, 40]}
+		"kiss":
+			# le vieux plié en deux au-dessus du héros
+			return {"lean": 62, "ht": 14, "fl": [34, 70], "bl": [-26, 55], "fa": [78, 62], "ba": [64, 70]}
 		"fall", "thrown":
 			return {"air": true, "rot": minf(80.0, 25.0 + t * 160.0), "ox": 0, "lean": -10, "fl": [20, 30], "bl": [-10, 20], "fa": [150, 20], "ba": [120, 30]}
 		"lying", "dead":
